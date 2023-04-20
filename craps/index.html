@@ -1,0 +1,24 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Craps Simulator</title>
+    <style>
+        /* Add your CSS styling here */
+    </style>
+</head>
+<body>
+    <div id="craps-table" style="float: left;">
+      <object id="craps-table-svg" data="craps-table.svg" type="image/svg+xml"></object>
+    </div>
+    <div style="float: left;">
+    	<button id="set-bets-button">Set Bets</button>
+    	<button id="roll-dice-button" disabled>Roll</button>
+	    <div id="game-status"></div>
+	    <div id="players-info"></div>
+    </div>
+    <script src="craps-simulator.js" type="module"></script>
+</body>
+</html>
