@@ -8,6 +8,7 @@
     <style>
         /* Add your CSS styling here */
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
 </head>
 <body>
     <div id="craps-table" style="float: left;">
@@ -16,8 +17,10 @@
     <div style="float: left;">
     	<button id="set-bets-button">Set Bets</button>
     	<button id="roll-dice-button" disabled>Roll</button>
-	    <div id="game-status"></div>
 	    <div id="players-info"></div>
+    </div>
+    <div style="float: left; width: 200px; text-align: right;">
+      <div id="game-status"></div>
     </div>
     <script src="craps-simulator.js" type="module"></script>
 </body>
