@@ -1,6 +1,8 @@
 // craps-simulator.js
 import * as bt from "./bet-types.js";
-import { bettingStrategies } from './strategies.js';
+import { players } from './players.js';
+import { Bet, payoutForWinningBet } from './bets.js';
+import { strategies } from './strategies.js';
 
 let currentPoint = 0;
 let comeOutRoll = true;
@@ -15,44 +17,21 @@ let canRoll = false;
 
 let bets = [];
 
-class BettingStrategy {
-    constructor(name, nextBetsFunction) {
-        this.name = name;
-        this.nextBets = nextBetsFunction;
-    }
+
+function findBettingStrategyById(strategyId) {
+  // console.log('findBettingStrategyById', strategyId);
+  return strategies.find(strategy => strategy.id === strategyId);
 }
 
-class Player {
-    constructor(name, balance, bettingStrategy) {
-        this.name = name;
-        this.balance = balance;
-        this.bettingStrategy = bettingStrategy;
-    }
+function findBetByType(betType) {
+  // console.log('findBetByType', betType);
+  return bt.betTypes.find(bt => bt.type === betType);
 }
 
-
-const players = [
-  {
-    name: "Brad",
-    balance: 1000,
-    bettingStrategyId: '410',
-    openingBet: function() {
-      return Math.round(this.balance * 0.01 / 10) * 50; // Example: 5% of the player's balance
-    },
-    color: '#da0',
-    posX: 100,
-  },
-  {
-    name: "Bobby",
-    balance: 100,
-    bettingStrategyId: 'pass',
-    openingBet: function() {
-      return 10;
-    },
-   color: '#44d',
-   posX: 200,
-  }
-];
+function findPlayerById(playerId) {
+  // console.log('findPlayerByType', playerId);
+  return players.find(p => p.id === playerId);
+}
 
 function updateBetsOnSvg() {
   console.log('updateBetsOnSvg', bets);
@@ -67,14 +46,16 @@ function updateBetsOnSvg() {
   // Iterate through the bets array
   for (const b of bets) {    // Create a visual representation of the bet (e.g., a circle)
     const betElement = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    betElement.setAttribute("cx", b.bet.posX);
-    betElement.setAttribute("cy", b.bet.posY);
+    const bType = findBetByType(b.type);
+    const player = findPlayerById(b.playerId);
+    betElement.setAttribute("cx", bType.posX);
+    betElement.setAttribute("cy", bType.posY);
     betElement.setAttribute("r", 10);
-    betElement.setAttribute("fill", b.player.color);
+    betElement.setAttribute("fill", player.color);
 
     // Add a title element to show the bet information on hover
     const titleElement = document.createElementNS("http://www.w3.org/2000/svg", "title");
-    titleElement.textContent = `${b.player.name}: ${b.bet.type} - $${b.bet.amount}`;
+    titleElement.textContent = `${player.name}: ${b.type} - $${b.amount}`;
     betElement.appendChild(titleElement);
 
     // Add the bet element to the bets group
@@ -82,27 +63,22 @@ function updateBetsOnSvg() {
   }
 }
 
-function findBettingStrategyById(strategyId) {
-  // console.log('findBettingStrategyById', strategyId);
-  return bettingStrategies.find(strategy => strategy.id === strategyId);
-}
-
-function findBetByType(betType) {
-  // console.log('findBetByType', betType);
-  return bt.betTypes.find(bt => bt.type === betType);
-}
 
 function setBets() {
  bets = [];
  _.forEach(players, p => {
-   const strategy = findBettingStrategyById(p.bettingStrategyId);
-   const sBets = strategy.nextBets(p);
-   _.forEach(sBets, b => {
-     const bet = findBetByType(b.type);
-     const amount = p.openingBet();
-     p.balance = p.balance - amount;
-     bets.push({ player: { name: p.name, color: p.color, posX: p.posX }, bet: { amount, ...bet }});
-   });
+   const strategy = findBettingStrategyById(p.strategyId);
+   const sBets = strategy.createBets(p);
+   const totalBet = _.sumBy(sBets, 'amount');
+   p.balance -= totalBet;
+   console.log('xxxxx sb', sBets, totalBet);
+   bets.push(...sBets);
+   // _.forEach(sBets, b => {
+   //   const bet = findBetByType(b.type);
+   //   const amount = p.openingBet();
+   //   p.balance = p.balance - amount;
+   //   bets.push({ player: { name: p.name, color: p.color, posX: p.posX }, bet: { amount, ...bet }});
+   // });
  });
  console.log('bets', bets);
 
@@ -121,9 +97,8 @@ function setBets() {
 function processBets(rollSum) {
   console.log('processBets', bets, rollSum, currentPoint, comeOutRoll);
   const gameOver = !isOn || rollSum === 7 || madePoint;
-  bets.forEach((b) => {
-    const bet = b.bet;
-    const player = players.find((p) => p.name === b.player.name);
+  bets.forEach((bet) => {
+    const player = findPlayerById(bet.playerId);
     let outcome = '';
     let win = 0;
     if (bet.type === bt.PASS) {
@@ -190,9 +165,9 @@ function updatePlayerInfo() {
     players.forEach(player => {
       const playerInfo = document.createElement("p");
       let t = `${player.name}: ${player.balance}`;
-      const pb = _.filter(bets, b => b.player.name === player.name);
+      const pb = _.filter(bets, b => b.playerId === player.id);
       _.forEach(pb, b => {
-        t += `<br>${b.bet.type} ${b.bet.amount}`;
+        t += `<br>${b.type} ${b.amount}`;
       });
       playerInfo.innerHTML = t
       playersInfoDiv.appendChild(playerInfo);

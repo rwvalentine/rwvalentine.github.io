@@ -1,37 +1,109 @@
-// Define the bet types as constants
-import { isOn } from "./craps-simulator.js";
 import * as bt from "./bet-types.js";
+import { Bet } from './bets.js';
 
-const PASS = "pass";
-const PLACE_4 = "place4";
-const PLACE_10 = "place10";
+class Strategy {
+  constructor(options) {
+    this.id = options.id;
+    this.name = options.name;
+    this.passLine = options.passLine;
+    this.comeBets = options.comeBets;
+    this.placeBets = {
+      [bt.PLACE_4]: options.placeBets[bt.PLACE_4],
+      [bt.PLACE_5]: options.placeBets[bt.PLACE_5],
+      [bt.PLACE_6]: options.placeBets[bt.PLACE_6],
+      [bt.PLACE_8]: options.placeBets[bt.PLACE_8],
+      [bt.PLACE_9]: options.placeBets[bt.PLACE_9],
+      [bt.PLACE_10]: options.placeBets[bt.PLACE_10],
+    };
+    this.minBet = options.minBet;
+    this.maxBet = options.maxBet;
+    this.flatBetAmount = options.flatBetAmount;
+    this.percentBetAmount = options.percentBetAmount;
+    this.pressingOptions = options.pressingOptions;
+  }
 
-const bettingStrategies = [
-  {
-    id: 'pass',
-    name: "Simple Pass Bet",
-    nextBets: (player) => {
-      return [
-        {
-          type: bt.PASS,
-        }
-      ];
-    }
-  },
-  {
-    id: '410',
-    name: "4-10 Strategy",
-    nextBets: (player) => {
-      return [
-          {
-            type: bt.PLACE_4,
-          },
-          {
-            type: bt.PLACE_10,
-          }
-        ];
+  openingBet(playerBalance, pressedAmount = 0) {
+    // Calculate the base bet amount considering the player's balance
+    const baseBet = playerBalance * this.percentBetAmount + this.flatBetAmount;
+
+    // Make sure the bet amount is a multiple of common bet payouts
+    const commonDivisor = 5;
+    let betAmount = Math.round(baseBet / commonDivisor) * commonDivisor;
+
+    // Enforce the min and max bet constraints
+    betAmount = Math.max(this.minBet, betAmount);
+    betAmount = Math.min(this.maxBet, betAmount);
+
+    return betAmount;
+  }
+
+  createBets(player) {
+    const bets = [];
+
+    // Create bets according to the player's strategy
+    for (const betType of Object.keys(this.placeBets)) {
+      if (this.placeBets[betType]) {
+        const betAmount = this.openingBet(player.balance);
+        const bet = new Bet(betType, betAmount, player.id);
+        bets.push(bet);
       }
     }
+
+    if (this.passLine) {
+      const betAmount = this.openingBet(player.balance);
+      const bet = new Bet(bt.PASS, betAmount, player.id);
+      bets.push(bet);
+    }
+
+    if (this.comeBets) {
+      const betAmount = this.openingBet(player.balance);
+      const bet = new Bet(bt.COME, betAmount, player.id);
+      bets.push(bet);
+    }
+
+    return bets;
+  }
+}
+
+  const strategies = [
+    new Strategy({
+      id: 1,
+      name: 'Pass 10',
+      passLine: true,
+      comeBets: false,
+      placeBets: {
+        [bt.PLACE_4]: false,
+        [bt.PLACE_5]: false,
+        [bt.PLACE_6]: false,
+        [bt.PLACE_8]: false,
+        [bt.PLACE_9]: false,
+        [bt.PLACE_10]: false,
+      },
+      minBet: 5,
+      maxBet: 20,
+      flatBetAmount: 10,
+      percentBetAmount: 0.00,
+      pressingOptions: {},
+    }),
+    new Strategy({
+      id: 2,
+      name: '4 10',
+      passLine: false,
+      comeBets: false,
+      placeBets: {
+        [bt.PLACE_4]: true,
+        [bt.PLACE_5]: false,
+        [bt.PLACE_6]: false,
+        [bt.PLACE_8]: false,
+        [bt.PLACE_9]: false,
+        [bt.PLACE_10]: true,
+      },
+      minBet: 5,
+      maxBet: 200,
+      flatBetAmount: 0,
+      percentBetAmount: 0.05,
+      pressingOptions: {},
+    }),
   ];
 
-export { bettingStrategies };
+export { strategies, Strategy };
