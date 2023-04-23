@@ -1,7 +1,7 @@
 // craps-simulator.js
 import * as bt from "./bet-types.js";
 import { players } from './players.js';
-import { Bet, payoutForWinningBet } from './bets.js';
+import { Bet, payout } from './bets.js';
 import { strategies } from './strategies.js';
 
 let currentPoint = 0;
@@ -63,34 +63,30 @@ function updateBetsOnSvg() {
   }
 }
 
-
 function setBets() {
- bets = [];
- _.forEach(players, p => {
-   const strategy = findBettingStrategyById(p.strategyId);
-   const sBets = strategy.createBets(p);
-   const totalBet = _.sumBy(sBets, 'amount');
-   p.balance -= totalBet;
-   console.log('xxxxx sb', sBets, totalBet);
-   bets.push(...sBets);
-   // _.forEach(sBets, b => {
-   //   const bet = findBetByType(b.type);
-   //   const amount = p.openingBet();
-   //   p.balance = p.balance - amount;
-   //   bets.push({ player: { name: p.name, color: p.color, posX: p.posX }, bet: { amount, ...bet }});
-   // });
- });
- console.log('bets', bets);
+  bets = [];
+  _.forEach(players, p => {
+    const strategy = findBettingStrategyById(p.strategyId);
+    const sBets = strategy.createNewBets(p);
+    const totalBet = _.sumBy(sBets, 'amount');
+    p.balance -= totalBet;
+    console.log('xxxxx sb', sBets, totalBet);
+    bets.push(...sBets);
+  });
+  console.log('bets', bets);
+  updateBetsOnSvg();
+}
 
-  // Generate playerBets array by calling nextBets for each player
-  // playerBets = players.map((player) => {
-  //   const strategy = findBettingStrategyById(player.bettingStrategyId);
-  //   console.log('xxx', player.name, strategy.id);
-  //   const bets = strategy.nextBets(player);
-  //   return bets.map((bet) => ({ player, bet: { ...bet, amount: player.openingBet() }}));
-  // }).flat();
-  // console.log('setBets', playerBets);
-  // Call updateBetsOnSvg to display the generated bets on the SVG
+function setOddsBets() {
+  _.forEach(players, p => {
+    const strategy = findBettingStrategyById(p.strategyId);
+    const oBets = strategy.createOddsBets(p, currentPoint);
+    const totalBet = _.sumBy(oBets, 'amount');
+    p.balance -= totalBet;
+    console.log('xxxxx ob', oBets, totalBet);
+    bets.push(...oBets);
+  });
+  console.log('bets', bets);
   updateBetsOnSvg();
 }
 
@@ -104,7 +100,7 @@ function processBets(rollSum) {
     if (bet.type === bt.PASS) {
       if (comeOutRoll) {
         if (rollSum === 7 || rollSum === 11) {
-          win = bet.amount;
+          win = payout(bet);
           outcome = 'win';
         } else if (rollSum === 2 || rollSum === 3 || rollSum === 12) {
           outcome = 'lose';
@@ -116,16 +112,27 @@ function processBets(rollSum) {
           win = -bet.amount;
         } else if (madePoint) {
           outcome = 'win';
-          win = bet.amount;
+          win = payout(bet);
         }
       }
-    } else if (bet.type === bt.PLACE_4 || bet.type === bt.PLACE_10) {
-      // PLACE_4 or PLACE_10 bet logic
+    } else if ((bet.type === bt.ODDS_COME) || (bet.type === bt.ODDS_PASS)) {
+      if (comeOutRoll) {
+        console.log('no odds for comeout roll!');
+      } else {
+        if (rollSum === 7) {
+          outcome = 'lose';
+          win = -bet.amount;
+        } else if (madePoint) {
+          outcome = 'win';
+          win = payout(bet, currentPoint);
+        }
+      }
+    } else { // place
       if (rollSum === 7) {
         outcome = 'lose';
         win = -bet.amount;
       } else if (rollSum === parseInt(bet.type.replace("PLACE_", ""))) {
-        win = bet.amount * (bet.type === bt.PLACE_4 ? 9 / 5 : 9 / 5);
+        win = payout(bet);
         outcome = 'win';
       } else {
         outcome = 'push';
@@ -196,49 +203,55 @@ function displayCurrentRoll(diceResult) {
     currentRollDiv.textContent = `Current Roll: ${diceResult.die1} + ${diceResult.die2} = ${diceResult.die1 + diceResult.die2}`;
 }
 
-function updateCurrentPointText(newPoint) {
-  currentPoint = newPoint;
-  console.log('updateCurrentPoint', currentPoint);
-  const currentPointText = getSvgElementById("current-point-text");
-  const onOffIndicator = getSvgElementById("on-off-indicator");
-  const onOffText = getSvgElementById("on-off-text");
-  const setBetsButton = document.getElementById("set-bets-button");
-
-  if (currentPoint === 0) {
-    currentPointText.textContent = "";
-    onOffIndicator.setAttribute("fill", "red");
-    onOffText.textContent = "OFF";
-    onOffIndicator.setAttribute("display", "");
-    onOffText.setAttribute("display", "");
-
-    // Disable the "Set Bets" button if the game is in the "OFF" state
-    setBetsButton.disabled = true;
-  } else {
-    currentPointText.textContent = `POINT: ${currentPoint}`;
-    onOffIndicator.setAttribute("fill", "green");
-    onOffText.textContent = "ON";
-    onOffIndicator.setAttribute("display", "");
-    onOffText.setAttribute("display", "");
-
-    // Enable the "Set Bets" button if the game is in the "ON" state
-    setBetsButton.disabled = false;
-  }
-}
+// function updateCurrentPointText(newPoint) {
+//   currentPoint = newPoint;
+//   const currentPointText = getSvgElementById("current-point-text");
+//   const onOffIndicator = getSvgElementById("on-off-indicator");
+//   const onOffText = getSvgElementById("on-off-text");
+//   const setBetsButton = document.getElementById("set-bets-button");
+//
+//   if (currentPoint === 0) {
+//     currentPointText.textContent = "";
+//     onOffIndicator.setAttribute("fill", "red");
+//     onOffText.textContent = "OFF";
+//     onOffIndicator.setAttribute("display", "");
+//     onOffText.setAttribute("display", "");
+//
+//     // Disable the "Set Bets" button if the game is in the "OFF" state
+//     setBetsButton.disabled = true;
+//   } else {
+//     currentPointText.textContent = `POINT: ${currentPoint}`;
+//     onOffIndicator.setAttribute("fill", "green");
+//     onOffText.textContent = "ON";
+//     onOffIndicator.setAttribute("display", "");
+//     onOffText.setAttribute("display", "");
+//
+//     // Enable the "Set Bets" button if the game is in the "ON" state
+//     setBetsButton.disabled = false;
+//   }
+// }
 
 function updateOnOffIndicator() {
-    const onOffIndicator = getSvgElementById("on-off-indicator");
-    const onOffText = getSvgElementById("on-off-text");
+  const curBt = bt.betTypes.find(t => t.type === `PLACE_${currentPoint}`);
+  const indicatorX = curBt.posX;
+  const indicatorY = curBt.posY - 50;
+  const onOffIndicator = getSvgElementById("on-off-indicator");
+  const onOffText = getSvgElementById("on-off-text");
 
-    if (isOn) {
-        onOffIndicator.setAttribute("fill", "green");
-        onOffText.textContent = "ON";
-    } else {
-        onOffIndicator.setAttribute("fill", "red");
-        onOffText.textContent = "OFF";
-    }
+  onOffIndicator.setAttribute("cx", indicatorX);
+  onOffIndicator.setAttribute("cy", indicatorY);
+  onOffText.setAttribute("x", indicatorX);
+  onOffText.setAttribute("y", indicatorY+4);
+  if (isOn) {
+    onOffIndicator.setAttribute("fill", "green");
+      onOffText.textContent = "ON";
+  } else {
+      onOffIndicator.setAttribute("fill", "red");
+      onOffText.textContent = "OFF";
+  }
 
-    onOffIndicator.setAttribute("display", "inline");
-    onOffText.setAttribute("display", "inline");
+  onOffIndicator.setAttribute("display", "inline");
+  onOffText.setAttribute("display", "inline");
 }
 
 function updateButtons() {
@@ -258,6 +271,8 @@ function setCurrentPoint(rollSum) {
     } else {
       isOn = true;
       currentPoint = rollSum;
+      console.log('set odds bets now', currentPoint);
+      setOddsBets();
     }
   } else {
     comeOutRoll = false;
@@ -268,7 +283,7 @@ function setCurrentPoint(rollSum) {
     }
   }
 
-  updateCurrentPointText(currentPoint);
+  // updateCurrentPointText(currentPoint);
   // Update the on/off indicator after setting isOn
   updateOnOffIndicator();
 }

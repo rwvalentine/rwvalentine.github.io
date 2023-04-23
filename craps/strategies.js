@@ -1,12 +1,16 @@
 import * as bt from "./bet-types.js";
 import { Bet } from './bets.js';
+import {oddsMultiples } from './house.js';
 
 class Strategy {
   constructor(options) {
     this.id = options.id;
     this.name = options.name;
     this.passLine = options.passLine;
+    this.oddsPass = options.oddsPass;
     this.comeBets = options.comeBets;
+    this.oddsCome = options.oddsCome;
+    this.maxOddsMultiple = options.maxOddsMultiple;
     this.placeBets = {
       [bt.PLACE_4]: options.placeBets[bt.PLACE_4],
       [bt.PLACE_5]: options.placeBets[bt.PLACE_5],
@@ -20,6 +24,7 @@ class Strategy {
     this.flatBetAmount = options.flatBetAmount;
     this.percentBetAmount = options.percentBetAmount;
     this.pressingOptions = options.pressingOptions;
+    this.initPassBet = 0;
   }
 
   openingBet(playerBalance, pressedAmount = 0) {
@@ -37,7 +42,7 @@ class Strategy {
     return betAmount;
   }
 
-  createBets(player) {
+  createNewBets(player) {
     const bets = [];
 
     // Create bets according to the player's strategy
@@ -52,12 +57,28 @@ class Strategy {
     if (this.passLine) {
       const betAmount = this.openingBet(player.balance);
       const bet = new Bet(bt.PASS, betAmount, player.id);
+      this.initPassBet = betAmount;
       bets.push(bet);
     }
 
     if (this.comeBets) {
       const betAmount = this.openingBet(player.balance);
       const bet = new Bet(bt.COME, betAmount, player.id);
+      bets.push(bet);
+    }
+
+    return bets;
+  }
+
+  createOddsBets(player, currentPoint) {
+    const bets = [];
+
+    if (this.passLine) {
+      let betAmount = this.initPassBet;
+      if (this.maxOddsMultiple) {
+        betAmount = betAmount * oddsMultiples[currentPoint];
+      }
+      const bet = new Bet(bt.ODDS_PASS, betAmount, player.id);
       bets.push(bet);
     }
 
@@ -70,7 +91,9 @@ class Strategy {
       id: 1,
       name: 'Pass 10',
       passLine: true,
+      oddsPass: true,
       comeBets: false,
+      maxOddsMultiple: true,
       placeBets: {
         [bt.PLACE_4]: false,
         [bt.PLACE_5]: false,
@@ -98,7 +121,7 @@ class Strategy {
         [bt.PLACE_9]: false,
         [bt.PLACE_10]: true,
       },
-      minBet: 5,
+      minBet: 25,
       maxBet: 200,
       flatBetAmount: 0,
       percentBetAmount: 0.05,

@@ -1,4 +1,4 @@
-import { betTypes } from './bet-types.js';
+import { betTypes, oddsLookup } from './bet-types.js';
 
 class Bet {
   constructor(type, amount, playerId) {
@@ -11,16 +11,24 @@ class Bet {
   // Additional methods for the Bet class can be added here if needed
 }
 
-function payoutForWinningBet(bet) {
-  const betType = betTypes.find((bt) => bt.name === bet.type);
+function payout(bet, point = 0) {
+  const betType = betTypes.find((bt) => bt.type === bet.type);
 
   if (!betType) {
     console.error(`Unknown bet type: ${bet.type}`);
     return 0;
   }
 
-  const payout = bet.amount * betType.odds;
-  return payout;
+  let p;
+
+  if (point > 0) { // odds bet
+    const odds = oddsLookup[point];
+    p = bet.amount * odds;
+  } else {
+    p = bet.amount * betType.odds;
+  }
+
+  return p;
 }
 
-export { Bet, payoutForWinningBet };
+export { Bet, payout };
