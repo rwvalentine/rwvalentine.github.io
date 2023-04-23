@@ -25,6 +25,7 @@ class Strategy {
     this.percentBetAmount = options.percentBetAmount;
     this.pressingOptions = options.pressingOptions;
     this.initPassBet = 0;
+    this.initComeBet = 0;
   }
 
   openingBet(playerBalance, pressedAmount = 0) {
@@ -64,6 +65,7 @@ class Strategy {
     if (this.comeBets) {
       const betAmount = this.openingBet(player.balance);
       const bet = new Bet(bt.COME, betAmount, player.id);
+      this.initComeBet = betAmount;
       bets.push(bet);
     }
 
