@@ -161,16 +161,18 @@ function updatePlayerInfo() {
     playersInfoDiv.innerHTML = '';
 
     players.forEach(player => {
-      const playerInfo = document.createElement("p");
-      let t = `${player.name}: $${player.balance}`;
+      const piDiv = document.createElement('div');
       const s = findBettingStrategyById(player.strategyId);
-      t += `<br>Strategy: ${s.name}`;
+      let t = `${player.name} - ${s.name}<br>Balance: $${player.balance}`;
       const pb = _.filter(bets, b => b.playerId === player.id);
       _.forEach(pb, b => {
-        t += `<br>${b.type} ${b.amount}`;
+        t += `<br> &nbsp; ${b.type} $${b.amount}`;
       });
-      playerInfo.innerHTML = t
-      playersInfoDiv.appendChild(playerInfo);
+      piDiv.innerHTML = t;
+      piDiv.style.paddingLeft = '8px';
+      piDiv.style.marginBottom = '8px';
+      piDiv.style.borderLeft = `5px solid ${player.color}`;
+      playersInfoDiv.appendChild(piDiv);
     });
 }
 
