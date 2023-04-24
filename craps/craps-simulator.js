@@ -34,7 +34,7 @@ function findPlayerById(playerId) {
 }
 
 function updateBetsOnSvg() {
-  console.log('updateBetsOnSvg', bets);
+  // console.log('updateBetsOnSvg', bets);
   // Get the bets group from the SVG
   const betsGroup = getSvgElementById("bets-group");
 
@@ -70,7 +70,6 @@ function setBets() {
     const sBets = strategy.createNewBets(p);
     const totalBet = _.sumBy(sBets, 'amount');
     p.balance -= totalBet;
-    console.log('xxxxx sb', sBets, totalBet);
     bets.push(...sBets);
   });
   console.log('bets', bets);
@@ -83,7 +82,6 @@ function setOddsBets() {
     const oBets = strategy.createOddsBets(p, currentPoint);
     const totalBet = _.sumBy(oBets, 'amount');
     p.balance -= totalBet;
-    console.log('xxxxx ob', oBets, totalBet);
     bets.push(...oBets);
   });
   console.log('bets', bets);
@@ -171,7 +169,9 @@ function updatePlayerInfo() {
 
     players.forEach(player => {
       const playerInfo = document.createElement("p");
-      let t = `${player.name}: ${player.balance}`;
+      let t = `${player.name}: $${player.balance}`;
+      const s = findBettingStrategyById(player.strategyId);
+      t += `<br>Strategy: ${s.name}`;
       const pb = _.filter(bets, b => b.playerId === player.id);
       _.forEach(pb, b => {
         t += `<br>${b.type} ${b.amount}`;
@@ -203,38 +203,15 @@ function displayCurrentRoll(diceResult) {
     currentRollDiv.textContent = `Current Roll: ${diceResult.die1} + ${diceResult.die2} = ${diceResult.die1 + diceResult.die2}`;
 }
 
-// function updateCurrentPointText(newPoint) {
-//   currentPoint = newPoint;
-//   const currentPointText = getSvgElementById("current-point-text");
-//   const onOffIndicator = getSvgElementById("on-off-indicator");
-//   const onOffText = getSvgElementById("on-off-text");
-//   const setBetsButton = document.getElementById("set-bets-button");
-//
-//   if (currentPoint === 0) {
-//     currentPointText.textContent = "";
-//     onOffIndicator.setAttribute("fill", "red");
-//     onOffText.textContent = "OFF";
-//     onOffIndicator.setAttribute("display", "");
-//     onOffText.setAttribute("display", "");
-//
-//     // Disable the "Set Bets" button if the game is in the "OFF" state
-//     setBetsButton.disabled = true;
-//   } else {
-//     currentPointText.textContent = `POINT: ${currentPoint}`;
-//     onOffIndicator.setAttribute("fill", "green");
-//     onOffText.textContent = "ON";
-//     onOffIndicator.setAttribute("display", "");
-//     onOffText.setAttribute("display", "");
-//
-//     // Enable the "Set Bets" button if the game is in the "ON" state
-//     setBetsButton.disabled = false;
-//   }
-// }
 
 function updateOnOffIndicator() {
+  let indicatorX = 800;
+  let indicatorY = 40;
   const curBt = bt.betTypes.find(t => t.type === `PLACE_${currentPoint}`);
-  const indicatorX = curBt.posX;
-  const indicatorY = curBt.posY - 50;
+  if (curBt) {
+    indicatorX = curBt.posX;
+    indicatorY = curBt.posY - 50;
+  }
   const onOffIndicator = getSvgElementById("on-off-indicator");
   const onOffText = getSvgElementById("on-off-text");
 

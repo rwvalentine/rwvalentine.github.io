@@ -31,21 +31,17 @@ class Strategy {
   openingBet(playerBalance, pressedAmount = 0) {
     // Calculate the base bet amount considering the player's balance
     const baseBet = playerBalance * this.percentBetAmount + this.flatBetAmount;
-
     // Make sure the bet amount is a multiple of common bet payouts
     const commonDivisor = 5;
     let betAmount = Math.round(baseBet / commonDivisor) * commonDivisor;
-
     // Enforce the min and max bet constraints
     betAmount = Math.max(this.minBet, betAmount);
     betAmount = Math.min(this.maxBet, betAmount);
-
     return betAmount;
   }
 
   createNewBets(player) {
     const bets = [];
-
     // Create bets according to the player's strategy
     for (const betType of Object.keys(this.placeBets)) {
       if (this.placeBets[betType]) {
@@ -54,28 +50,24 @@ class Strategy {
         bets.push(bet);
       }
     }
-
     if (this.passLine) {
       const betAmount = this.openingBet(player.balance);
       const bet = new Bet(bt.PASS, betAmount, player.id);
       this.initPassBet = betAmount;
       bets.push(bet);
     }
-
     if (this.comeBets) {
       const betAmount = this.openingBet(player.balance);
       const bet = new Bet(bt.COME, betAmount, player.id);
       this.initComeBet = betAmount;
       bets.push(bet);
     }
-
     return bets;
   }
 
   createOddsBets(player, currentPoint) {
     const bets = [];
-
-    if (this.passLine) {
+    if (this.oddsPass) {
       let betAmount = this.initPassBet;
       if (this.maxOddsMultiple) {
         betAmount = betAmount * oddsMultiples[currentPoint];
@@ -83,52 +75,71 @@ class Strategy {
       const bet = new Bet(bt.ODDS_PASS, betAmount, player.id);
       bets.push(bet);
     }
-
     return bets;
   }
 }
 
-  const strategies = [
-    new Strategy({
-      id: 1,
-      name: 'Pass 10',
-      passLine: true,
-      oddsPass: true,
-      comeBets: false,
-      maxOddsMultiple: true,
-      placeBets: {
-        [bt.PLACE_4]: false,
-        [bt.PLACE_5]: false,
-        [bt.PLACE_6]: false,
-        [bt.PLACE_8]: false,
-        [bt.PLACE_9]: false,
-        [bt.PLACE_10]: false,
-      },
-      minBet: 5,
-      maxBet: 20,
-      flatBetAmount: 10,
-      percentBetAmount: 0.00,
-      pressingOptions: {},
-    }),
-    new Strategy({
-      id: 2,
-      name: '4 10',
-      passLine: false,
-      comeBets: false,
-      placeBets: {
-        [bt.PLACE_4]: true,
-        [bt.PLACE_5]: false,
-        [bt.PLACE_6]: false,
-        [bt.PLACE_8]: false,
-        [bt.PLACE_9]: false,
-        [bt.PLACE_10]: true,
-      },
-      minBet: 25,
-      maxBet: 200,
-      flatBetAmount: 0,
-      percentBetAmount: 0.05,
-      pressingOptions: {},
-    }),
-  ];
+
+let strategies = [];
+
+// Convert plain objects to Strategy class instances
+function objectsToStrategyInstances(objects) {
+  return objects.map(object => new Strategy(object));
+}
+
+function loadStrategies() {
+  const loadedStrategies = JSON.parse(localStorage.getItem('strategies'));
+  if (loadedStrategies) {
+    console.log('loading strategies...');
+    strategies.length = 0;
+    const strategyInstances = objectsToStrategyInstances(loadedStrategies);
+    strategies.push(...strategyInstances);
+  } else { // use these
+    strategies = [
+      new Strategy({
+        id: 1,
+        name: 'Pass Max Odds',
+        passLine: true,
+        oddsPass: true,
+        comeBets: false,
+        maxOddsMultiple: true,
+        placeBets: {
+          [bt.PLACE_4]: false,
+          [bt.PLACE_5]: false,
+          [bt.PLACE_6]: false,
+          [bt.PLACE_8]: false,
+          [bt.PLACE_9]: false,
+          [bt.PLACE_10]: false,
+        },
+        minBet: 5,
+        maxBet: 20,
+        flatBetAmount: 10,
+        percentBetAmount: 0.00,
+        pressingOptions: {},
+      }),
+      new Strategy({
+        id: 2,
+        name: '4-10',
+        passLine: false,
+        comeBets: false,
+        placeBets: {
+          [bt.PLACE_4]: true,
+          [bt.PLACE_5]: false,
+          [bt.PLACE_6]: false,
+          [bt.PLACE_8]: false,
+          [bt.PLACE_9]: false,
+          [bt.PLACE_10]: true,
+        },
+        minBet: 25,
+        maxBet: 200,
+        flatBetAmount: 0,
+        percentBetAmount: 0.05,
+        pressingOptions: {},
+      }),
+    ];
+  }
+}
+
+loadStrategies();
 
 export { strategies, Strategy };

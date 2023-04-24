@@ -1,7 +1,7 @@
 export const players = [
   {
     id: 1,
-    name: 'Brad',
+    name: 'Player 1',
     balance: 1000,
     strategyId: 2,
     color: '#da0',
@@ -9,7 +9,7 @@ export const players = [
   },
   {
     id: 2,
-    name: 'Bobby',
+    name: 'Player 2',
     balance: 100,
     strategyId: 1,
     color: '#44d',
