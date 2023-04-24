@@ -14,6 +14,10 @@ export let isOn = false;
 
 let betsPlaced = false;
 let canRoll = false;
+let gameOver = true;
+let gameCount = 0;
+let rollCount = 0;
+let rolling = false;
 
 let bets = [];
 
@@ -63,19 +67,6 @@ function updateBetsOnSvg() {
   }
 }
 
-function setBets() {
-  bets = [];
-  _.forEach(players, p => {
-    const strategy = findBettingStrategyById(p.strategyId);
-    const sBets = strategy.createNewBets(p);
-    const totalBet = _.sumBy(sBets, 'amount');
-    p.balance -= totalBet;
-    bets.push(...sBets);
-  });
-  console.log('bets', bets);
-  updateBetsOnSvg();
-}
-
 function setOddsBets() {
   _.forEach(players, p => {
     const strategy = findBettingStrategyById(p.strategyId);
@@ -88,9 +79,10 @@ function setOddsBets() {
   updateBetsOnSvg();
 }
 
-function processBets(rollSum) {
-  console.log('processBets', bets, rollSum, currentPoint, comeOutRoll);
-  const gameOver = !isOn || rollSum === 7 || madePoint;
+function processRoll(rollSum) {
+  console.log('processRoll', bets, rollSum, currentPoint, comeOutRoll);
+  gameOver = !isOn || rollSum === 7 || madePoint;
+  betsPlaced = !gameOver;
   bets.forEach((bet) => {
     const player = findPlayerById(bet.playerId);
     let outcome = '';
@@ -144,6 +136,7 @@ function processBets(rollSum) {
   });
 
   if (gameOver) {
+    gameCount++;
     // Remove bets
     console.log('clear bets');
     bets = [];
@@ -182,8 +175,11 @@ function updatePlayerInfo() {
 }
 
 
-function updateTable() {
-    // Update the SVG table based on the current game state
+function updateSessionInfo() {
+    const sessionInfoDiv = document.getElementById("session-info");
+    sessionInfoDiv.innerHTML = `
+    Games: ${gameCount}<br>
+    Rolls: ${rollCount}<br>`;
 }
 
 function updateGameStatus() {
@@ -195,6 +191,7 @@ function updateGameStatus() {
     isOn = ${isOn}<br>
     betsPlaced = ${betsPlaced}<br>
     canRoll = ${canRoll}<br>
+    gameOver = ${gameOver}<br>
     `;
 }
 
@@ -232,11 +229,16 @@ function updateOnOffIndicator() {
 }
 
 function updateButtons() {
-  // console.log('updateButtons isOn betsPlaced', isOn, betsPlaced);
   const rollDiceButton = document.getElementById('roll-dice-button');
   const setBetsButton = document.getElementById('set-bets-button');
-  rollDiceButton.disabled = !canRoll;
-  setBetsButton.disabled = isOn || betsPlaced;
+  const run10Btn = document.getElementById('run10');
+  const run100Btn = document.getElementById('run100');
+  const run1000Btn = document.getElementById('run1000');
+  rollDiceButton.disabled = !canRoll || rolling;
+  run10Btn.disabled = rolling;
+  run100Btn.disabled = rolling;
+  run1000Btn.disabled = rolling;
+  setBetsButton.disabled = betsPlaced;
 }
 
 function setCurrentPoint(rollSum) {
@@ -260,43 +262,68 @@ function setCurrentPoint(rollSum) {
     }
   }
 
-  // updateCurrentPointText(currentPoint);
-  // Update the on/off indicator after setting isOn
   updateOnOffIndicator();
 }
-
-document.getElementById("set-bets-button").addEventListener("click", () => {
-  setBets();
-  betsPlaced = true;
-  canRoll = true;
-  updateButtons();
-  updatePlayerInfo();
-});
-
 
 function rollDice() {
   canRoll = false;
   die1 = Math.floor(Math.random() * 6) + 1;
   die2 = Math.floor(Math.random() * 6) + 1;
+  rollCount++;
   const die1Text = getSvgElementById('die1-text');
   die1Text.textContent = die1;
   const die2Text = getSvgElementById('die2-text');
   die2Text.textContent = die2;
 }
 
-document.getElementById("roll-dice-button").addEventListener("click", () => {
-  rollDice();
-  const rollSum = die1 + die2;
-
-  // Update the table based on the roll results
-  setCurrentPoint(rollSum);
-  processBets(rollSum);
-
-  betsPlaced = false; // Reset the betsPlaced flag
-
-  // Call setBets() after processing the roll results, if needed
-  canRoll = isOn || betsPlaced;
+function updateTable() {
   updateButtons();
   updatePlayerInfo();
+  updateSessionInfo();
   updateGameStatus();
-});
+}
+
+export function setBets() {
+  bets = [];
+  _.forEach(players, p => {
+    const strategy = findBettingStrategyById(p.strategyId);
+    const sBets = strategy.createNewBets(p);
+    const totalBet = _.sumBy(sBets, 'amount');
+    p.balance -= totalBet;
+    bets.push(...sBets);
+  });
+  betsPlaced = true;
+  canRoll = true;
+  console.log('bets', bets);
+  updateBetsOnSvg();
+  updateTable();
+}
+
+export function doRoll() {
+  rollDice();
+  const rollSum = die1 + die2;
+  // Update the table based on the roll results
+  setCurrentPoint(rollSum);
+  processRoll(rollSum);
+
+  canRoll = isOn || betsPlaced;
+  updateTable();
+}
+
+export function run(n) {
+  let roll = 0;
+  rolling = true;
+  updateButtons();
+  setTimeout( () => {
+    while (roll < n) {
+      if (betsPlaced) {
+        doRoll();
+        roll++;
+      } else {
+        setBets();
+      }
+      rolling = false;
+      updateButtons();
+      console.log(`roll ${roll + 1} done`);
+    }}, 100);
+}

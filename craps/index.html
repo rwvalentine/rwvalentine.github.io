@@ -5,31 +5,26 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Craps Simulator</title>
-    <style>
-      .tab {
-        display: none;
-      }
-      .tab.active {
-        display: block;
-      }
-      .tab-buttons button {
-        cursor: pointer;
-      }
-    </style>
+    <link rel="stylesheet" href="style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
 </head>
 <body>
-  <div class="tab-buttons">
-    <button id="svg-tab-button">Table</button>
-    <button id="strategy-tab-button">Strategy</button>
+  <div class="tab-container">
+    <button class="tab-button active" id="svg-tab-button">Play</button>
+    <button class="tab-button" id="strategy-tab-button">Strategy</button>
   </div>
+
   <div id="svg-tab" class="tab">
     <div id="craps-table" style="float: left;">
       <object id="craps-table-svg" data="craps-table.svg" type="image/svg+xml"></object>
     </div>
     <div style="float: left;">
-      <button id="set-bets-button">Set Bets</button>
+      <button id="set-bets-button">Place Bets</button>
       <button id="roll-dice-button" disabled>Roll</button>
+      <button id="run10">Roll 10</button>
+      <button id="run100">Roll 100</button>
+      <button id="run1000">Roll 1000</button>
+      <div id="session-info"></div>
       <div id="players-info"></div>
     </div>
     <div style="float: left; width: 200px; text-align: right;">

@@ -1,4 +1,25 @@
 import { strategies } from './strategies.js';
+import { setBets, doRoll, run } from './craps-simulator.js';
+
+document.getElementById("set-bets-button").addEventListener("click", () => {
+  setBets();
+});
+
+document.getElementById("roll-dice-button").addEventListener("click", () => {
+  doRoll();
+});
+
+document.getElementById("run10").addEventListener("click", () => {
+  run(10);
+});
+
+document.getElementById("run100").addEventListener("click", () => {
+  run(100);
+});
+
+document.getElementById("run1000").addEventListener("click", () => {
+  run(1000);
+});
 
 const strategyTabButton = document.getElementById('strategy-tab-button');
 const svgTabButton = document.getElementById('svg-tab-button');

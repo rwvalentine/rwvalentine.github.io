@@ -1,0 +1,35 @@
+.tab {
+  display: none;
+}
+.tab.active {
+  display: block;
+}
+.tab-buttons button {
+  cursor: pointer;
+}
+
+/* Container for the tab buttons */
+.tab-container {
+  display: flex;
+}
+
+/* Style for the tab buttons */
+.tab-button {
+  background-color: #357;
+  color: gold;
+  font-weight: bold;
+  border: 2px solid white;
+  padding: 10px 20px;
+  cursor: pointer;
+  width: 100px;
+}
+
+/* Hover effect for the tab buttons */
+.tab-button:hover {
+  background-color: #1a3d7c;
+}
+
+/* Style for the currently active tab button */
+.tab-button.active {
+  background-color: #1a3d7c;
+}
