@@ -39,8 +39,6 @@ function findPlayerById(playerId) {
 }
 
 function updateBetsOnSvg() {
-  // console.log('updateBetsOnSvg', bets);
-  // Get the bets group from the SVG
   const betsGroup = getSvgElementById("bets-group");
   // Clear the current bets from the group
   while (betsGroup.firstChild) {
@@ -51,14 +49,12 @@ function updateBetsOnSvg() {
     const betElement = document.createElementNS("http://www.w3.org/2000/svg", "circle");
     betElement.setAttribute("cx", b.posX);
     betElement.setAttribute("cy", b.posY);
-    betElement.setAttribute("r", 10);
+    betElement.setAttribute("r", 15);
     betElement.setAttribute("fill", b.color);
-
     // Add a title element to show the bet information on hover
     const titleElement = document.createElementNS("http://www.w3.org/2000/svg", "title");
     titleElement.textContent = `${b.type} - $${b.amount}`;
     betElement.appendChild(titleElement);
-
     // Add the bet element to the bets group
     betsGroup.appendChild(betElement);
   }
@@ -211,24 +207,17 @@ function displayCurrentRoll(diceResult) {
 
 function updateOnOffIndicator() {
   let indicatorX = 800;
-  let indicatorY = 40;
-  // const curBt = bt.betTypes.find(t => t.type === `PLACE_${currentPoint}`);
-  // if (curBt) {
-  //   indicatorX = curBt.posX;
-  //   indicatorY = curBt.posY - 50;
-  // }
+  let indicatorY = 50;
   if (currentPoint > 0) {
     indicatorX = bt.pointPosX[currentPoint];
     indicatorY = 120;
   }
-
   const onOffIndicator = getSvgElementById("on-off-indicator");
   const onOffText = getSvgElementById("on-off-text");
-
   onOffIndicator.setAttribute("cx", indicatorX);
   onOffIndicator.setAttribute("cy", indicatorY);
   onOffText.setAttribute("x", indicatorX);
-  onOffText.setAttribute("y", indicatorY+4);
+  onOffText.setAttribute("y", indicatorY+8);
   if (isOn) {
     onOffIndicator.setAttribute("fill", "green");
       onOffText.textContent = "ON";
@@ -236,7 +225,6 @@ function updateOnOffIndicator() {
       onOffIndicator.setAttribute("fill", "red");
       onOffText.textContent = "OFF";
   }
-
   onOffIndicator.setAttribute("display", "inline");
   onOffText.setAttribute("display", "inline");
 }
