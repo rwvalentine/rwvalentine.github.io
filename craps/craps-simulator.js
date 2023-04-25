@@ -13,7 +13,7 @@ let die2 = 0;
 export let isOn = false;
 
 let betsPlaced = false;
-let comeBetsPlaced = false;
+let onBetsPlaced = false;
 let canRoll = false;
 let gameOver = true;
 let gameCount = 0;
@@ -73,6 +73,7 @@ function processRoll(rollSum) {
     }
     return w;
   }
+  const sevenOut = !comeOutRoll && (rollSum === 7);
   bets.forEach((bet) => {
     const player = findPlayerById(bet.playerId);
     let win = 0;
@@ -80,7 +81,7 @@ function processRoll(rollSum) {
       if (comeOutRoll) {
         win = checkFirstRoll(rollSum, bet);
       } else {
-        if (rollSum === 7) {
+        if (sevenOut) {
           win = -bet.amount;
         } else if (madePoint) {
           win = payout(bet);
@@ -97,7 +98,7 @@ function processRoll(rollSum) {
             bet.posX = bt.pointPosX[rollSum] + player.posX;
             bet.posY = 230;
           }
-        } else if (rollSum === 7) {
+        } else if (sevenOut) {
           win = -bet.amount;
         } else if (rollSum === bet.point) {
           win = payout(bet);
@@ -107,10 +108,10 @@ function processRoll(rollSum) {
       if (comeOutRoll) {
         console.log('no odds for comeout roll!');
       } else {
-        if (rollSum === 7) {
+        if (sevenOut) {
           win = -bet.amount;
         } else if (madePoint) {
-          win = payout(bet, currentPoint);
+          win = payout(bet, bet.point);
         }
       }
     } else { // place
@@ -120,29 +121,42 @@ function processRoll(rollSum) {
         win = payout(bet);
       }
     }
+    bet.payout = win;
     let outcome = 'push';
     if (win > 0) {
+      player.balance += win;
       outcome = 'win';
+      player.session.won += win;
     }
     if (win < 0) {
       outcome = 'lose';
+      player.session.lost += -win;
     }
     bet.outcome = outcome;
-    bet.payout = win;
-    player.balance += win;
-    if (gameOver) {
-      player.balance += bet.amount;
+
+    // if (gameOver) {
+    //   player.balance += bet.amount;
+    // }
+    if (sevenOut) {
+      onBetsPlaced = false;
     }
     console.log(player.name, bet.type, outcome, win);
   });
 
-  if (gameOver) {
-    gameCount++;
-    // remove pass and pass odds
-    bets = _.filter(bets, b => !([bt.PASS, bt.ODDS_PASS].includes(b.type)));
-  }
   // remove losers
   bets = _.filter(bets, b => b.outcome !== 'lose');
+  if (gameOver) { // remove pass bets
+    gameCount++;
+    // remove remaining pass and pass odds
+    bets = _.filter(bets, b => {
+      const isPass = [bt.PASS, bt.ODDS_PASS].includes(b.type);
+      if (isPass) { // return bet amount to player
+        const p = findPlayerById(b.playerId);
+        p.balance += b.amount;
+      }
+      return !isPass;
+    });
+  }
 }
 
 function getSvgElementById(id) {
@@ -161,18 +175,22 @@ function updatePlayerInfo() {
     const playersInfoDiv = document.getElementById("players-info");
     playersInfoDiv.innerHTML = '';
 
-    players.forEach(player => {
+    players.forEach(p => {
       const piDiv = document.createElement('div');
-      const s = findBettingStrategyById(player.strategyId);
-      let t = `${player.name} - ${s.name}<br>Balance: $${player.balance}`;
-      const pb = _.filter(bets, b => b.playerId === player.id);
+      const s = findBettingStrategyById(p.strategyId);
+      let t = `
+        ${p.name} - ${s.name}<br>Balance: $${p.balance}<br>
+        w:l - ${p.session.won}:${p.session.lost} = ${Math.round(10000 * p.session.won / (p.session.won + p.session.lost)) / 100 }%<br>
+        net: $${p.session.won - p.session.lost}
+      `;
+      const pb = _.filter(bets, b => b.playerId === p.id);
       _.forEach(pb, b => {
         t += `<br> &nbsp; ${b.type} $${b.amount}`;
       });
       piDiv.innerHTML = t;
       piDiv.style.paddingLeft = '8px';
       piDiv.style.marginBottom = '8px';
-      piDiv.style.borderLeft = `5px solid ${player.color}`;
+      piDiv.style.borderLeft = `5px solid ${p.color}`;
       playersInfoDiv.appendChild(piDiv);
     });
 }
@@ -193,7 +211,7 @@ function updateGameStatus() {
     madePoint = ${madePoint}<br>
     isOn = ${isOn}<br>
     betsPlaced = ${betsPlaced}<br>
-    comeBetsPlaced = ${comeBetsPlaced}<br>
+    onBetsPlaced = ${onBetsPlaced}<br>
     canRoll = ${canRoll}<br>
     gameOver = ${gameOver}<br>
     `;
@@ -210,7 +228,7 @@ function updateOnOffIndicator() {
   let indicatorY = 50;
   if (currentPoint > 0) {
     indicatorX = bt.pointPosX[currentPoint];
-    indicatorY = 120;
+    indicatorY = 80;
   }
   const onOffIndicator = getSvgElementById("on-off-indicator");
   const onOffText = getSvgElementById("on-off-text");
@@ -239,7 +257,7 @@ function updateButtons() {
   run10Btn.disabled = rolling;
   run100Btn.disabled = rolling;
   run1000Btn.disabled = rolling;
-  placeBetsButton.disabled = betsPlaced && comeBetsPlaced;
+  placeBetsButton.disabled = betsPlaced;
 }
 
 function setCurrentPoint(rollSum) {
@@ -302,10 +320,9 @@ function setOnBets() {
     p.balance -= totalBet;
     bets.push(...sBets);
   });
-  comeBetsPlaced = true;
 }
 
-export function placeBets() {
+export function makeBets() {
   if (!isOn) {
     // bets = [];
     _.forEach(players, p => {
@@ -315,7 +332,6 @@ export function placeBets() {
       p.balance -= totalBet;
       bets.push(...sBets);
     });
-    comeBetsPlaced = false;
   }
   betsPlaced = true;
   canRoll = true;
@@ -331,9 +347,13 @@ export function doRoll() {
   setCurrentPoint(rollSum);
   processRoll(rollSum);
   if ((comeOutRoll) && (currentPoint > 0)) {
-    console.log('set on and odds bets now', currentPoint);
+    console.log('set odds bets now', currentPoint);
     setOddsBets();
+  }
+  if ((comeOutRoll) && (currentPoint > 0) && !onBetsPlaced) {
+    console.log('set on bets now', currentPoint);
     setOnBets();
+    onBetsPlaced = true;
   }
   canRoll = isOn || betsPlaced;
   updateTable();
@@ -349,7 +369,7 @@ export function run(n) {
         doRoll();
         roll++;
       } else {
-        placeBets();
+        makeBets();
       }
       rolling = false;
       updateButtons();

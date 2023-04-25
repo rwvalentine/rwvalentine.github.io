@@ -32,11 +32,11 @@ class Strategy {
     // Calculate the base bet amount considering the player's balance
     const baseBet = playerBalance * this.percentBetAmount + this.flatBetAmount;
     // Make sure the bet amount is a multiple of common bet payouts
-    const commonDivisor = 5;
+    const commonDivisor = 10;
     let betAmount = Math.round(baseBet / commonDivisor) * commonDivisor;
     // Enforce the min and max bet constraints
-    betAmount = Math.max(this.minBet, betAmount);
-    betAmount = Math.min(this.maxBet, betAmount);
+    betAmount = Math.max(this.minBet * 1.0, betAmount);
+    betAmount = Math.min(this.maxBet * 1.0, betAmount);
     return betAmount;
   }
 
@@ -71,13 +71,14 @@ class Strategy {
   }
 
   createOddsBets(player, currentPoint) {
+    console.log('createOddsBets curpnt', currentPoint);
     const bets = [];
     if (this.oddsPass) {
       let betAmount = this.initPassBet;
       if (this.maxOddsMultiple) {
         betAmount = betAmount * oddsMultiples[currentPoint];
       }
-      const bet = new Bet(bt.ODDS_PASS, betAmount, player.id);
+      const bet = new Bet(bt.ODDS_PASS, betAmount, player.id, currentPoint);
       bets.push(bet);
     }
     return bets;

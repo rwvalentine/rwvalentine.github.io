@@ -1,8 +1,8 @@
 import { strategies } from './strategies.js';
-import { placeBets, doRoll, run } from './craps-simulator.js';
+import { makeBets, doRoll, run } from './craps-simulator.js';
 
 document.getElementById("set-bets-button").addEventListener("click", () => {
-  placeBets();
+  makeBets();
 });
 
 document.getElementById("roll-dice-button").addEventListener("click", () => {
