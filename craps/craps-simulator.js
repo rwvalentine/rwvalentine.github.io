@@ -13,6 +13,7 @@ let die2 = 0;
 export let isOn = false;
 
 let betsPlaced = false;
+let comeBetsPlaced = false;
 let canRoll = false;
 let gameOver = true;
 let gameCount = 0;
@@ -41,25 +42,21 @@ function updateBetsOnSvg() {
   // console.log('updateBetsOnSvg', bets);
   // Get the bets group from the SVG
   const betsGroup = getSvgElementById("bets-group");
-
   // Clear the current bets from the group
   while (betsGroup.firstChild) {
     betsGroup.removeChild(betsGroup.firstChild);
   }
-
   // Iterate through the bets array
   for (const b of bets) {    // Create a visual representation of the bet (e.g., a circle)
     const betElement = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    const bType = findBetByType(b.type);
-    const player = findPlayerById(b.playerId);
-    betElement.setAttribute("cx", bType.posX);
-    betElement.setAttribute("cy", bType.posY);
+    betElement.setAttribute("cx", b.posX);
+    betElement.setAttribute("cy", b.posY);
     betElement.setAttribute("r", 10);
-    betElement.setAttribute("fill", player.color);
+    betElement.setAttribute("fill", b.color);
 
     // Add a title element to show the bet information on hover
     const titleElement = document.createElementNS("http://www.w3.org/2000/svg", "title");
-    titleElement.textContent = `${player.name}: ${b.type} - $${b.amount}`;
+    titleElement.textContent = `${b.type} - $${b.amount}`;
     betElement.appendChild(titleElement);
 
     // Add the bet element to the bets group
@@ -67,41 +64,46 @@ function updateBetsOnSvg() {
   }
 }
 
-function setOddsBets() {
-  _.forEach(players, p => {
-    const strategy = findBettingStrategyById(p.strategyId);
-    const oBets = strategy.createOddsBets(p, currentPoint);
-    const totalBet = _.sumBy(oBets, 'amount');
-    p.balance -= totalBet;
-    bets.push(...oBets);
-  });
-  console.log('bets', bets);
-  updateBetsOnSvg();
-}
-
 function processRoll(rollSum) {
   console.log('processRoll', bets, rollSum, currentPoint, comeOutRoll);
   gameOver = !isOn || rollSum === 7 || madePoint;
   betsPlaced = !gameOver;
+  const checkFirstRoll = (rs, b) => {
+    let w = 0;
+    if (rs === 7 || rs === 11) {
+      w = payout(b);
+    } else if (rs === 2 || rs === 3 || rs === 12) {
+      w = -b.amount;
+    }
+    return w;
+  }
   bets.forEach((bet) => {
     const player = findPlayerById(bet.playerId);
-    let outcome = '';
     let win = 0;
     if (bet.type === bt.PASS) {
       if (comeOutRoll) {
-        if (rollSum === 7 || rollSum === 11) {
-          win = payout(bet);
-          outcome = 'win';
-        } else if (rollSum === 2 || rollSum === 3 || rollSum === 12) {
-          outcome = 'lose';
-          win = -bet.amount;
-        }
+        win = checkFirstRoll(rollSum, bet);
       } else {
         if (rollSum === 7) {
-          outcome = 'lose';
           win = -bet.amount;
         } else if (madePoint) {
-          outcome = 'win';
+          win = payout(bet);
+        }
+      }
+    } else if (bet.type === bt.COME) {
+      if (comeOutRoll) {
+        console.log('cannot place COME bet on comeout roll');
+      } else {
+        if (!(bet.point > 0)) {
+          win = checkFirstRoll(rollSum, bet);
+          if (win === 0) {
+            bet.point = rollSum;
+            bet.posX = bt.pointPosX[rollSum] + player.posX;
+            bet.posY = 230;
+          }
+        } else if (rollSum === 7) {
+          win = -bet.amount;
+        } else if (rollSum === bet.point) {
           win = payout(bet);
         }
       }
@@ -110,24 +112,27 @@ function processRoll(rollSum) {
         console.log('no odds for comeout roll!');
       } else {
         if (rollSum === 7) {
-          outcome = 'lose';
           win = -bet.amount;
         } else if (madePoint) {
-          outcome = 'win';
           win = payout(bet, currentPoint);
         }
       }
     } else { // place
       if (rollSum === 7) {
-        outcome = 'lose';
         win = -bet.amount;
-      } else if (rollSum === parseInt(bet.type.replace("PLACE_", ""))) {
+      } else if (rollSum === bet.point) {
         win = payout(bet);
-        outcome = 'win';
-      } else {
-        outcome = 'push';
       }
     }
+    let outcome = 'push';
+    if (win > 0) {
+      outcome = 'win';
+    }
+    if (win < 0) {
+      outcome = 'lose';
+    }
+    bet.outcome = outcome;
+    bet.payout = win;
     player.balance += win;
     if (gameOver) {
       player.balance += bet.amount;
@@ -137,11 +142,11 @@ function processRoll(rollSum) {
 
   if (gameOver) {
     gameCount++;
-    // Remove bets
-    console.log('clear bets');
-    bets = [];
-    updateBetsOnSvg([]);
+    // remove pass and pass odds
+    bets = _.filter(bets, b => !([bt.PASS, bt.ODDS_PASS].includes(b.type)));
   }
+  // remove losers
+  bets = _.filter(bets, b => b.outcome !== 'lose');
 }
 
 function getSvgElementById(id) {
@@ -192,6 +197,7 @@ function updateGameStatus() {
     madePoint = ${madePoint}<br>
     isOn = ${isOn}<br>
     betsPlaced = ${betsPlaced}<br>
+    comeBetsPlaced = ${comeBetsPlaced}<br>
     canRoll = ${canRoll}<br>
     gameOver = ${gameOver}<br>
     `;
@@ -206,11 +212,16 @@ function displayCurrentRoll(diceResult) {
 function updateOnOffIndicator() {
   let indicatorX = 800;
   let indicatorY = 40;
-  const curBt = bt.betTypes.find(t => t.type === `PLACE_${currentPoint}`);
-  if (curBt) {
-    indicatorX = curBt.posX;
-    indicatorY = curBt.posY - 50;
+  // const curBt = bt.betTypes.find(t => t.type === `PLACE_${currentPoint}`);
+  // if (curBt) {
+  //   indicatorX = curBt.posX;
+  //   indicatorY = curBt.posY - 50;
+  // }
+  if (currentPoint > 0) {
+    indicatorX = bt.pointPosX[currentPoint];
+    indicatorY = 120;
   }
+
   const onOffIndicator = getSvgElementById("on-off-indicator");
   const onOffText = getSvgElementById("on-off-text");
 
@@ -232,7 +243,7 @@ function updateOnOffIndicator() {
 
 function updateButtons() {
   const rollDiceButton = document.getElementById('roll-dice-button');
-  const setBetsButton = document.getElementById('set-bets-button');
+  const placeBetsButton = document.getElementById('set-bets-button');
   const run10Btn = document.getElementById('run10');
   const run100Btn = document.getElementById('run100');
   const run1000Btn = document.getElementById('run1000');
@@ -240,7 +251,7 @@ function updateButtons() {
   run10Btn.disabled = rolling;
   run100Btn.disabled = rolling;
   run1000Btn.disabled = rolling;
-  setBetsButton.disabled = betsPlaced;
+  placeBetsButton.disabled = betsPlaced && comeBetsPlaced;
 }
 
 function setCurrentPoint(rollSum) {
@@ -252,8 +263,6 @@ function setCurrentPoint(rollSum) {
     } else {
       isOn = true;
       currentPoint = rollSum;
-      console.log('set odds bets now', currentPoint);
-      setOddsBets();
     }
   } else {
     comeOutRoll = false;
@@ -261,6 +270,7 @@ function setCurrentPoint(rollSum) {
     // If the game is on, only update the isOn status when a 7 or the current point is rolled.
     if (rollSum === 7 || rollSum === currentPoint) {
       isOn = false;
+      currentPoint = 0;
     }
   }
 
@@ -283,17 +293,42 @@ function updateTable() {
   updatePlayerInfo();
   updateSessionInfo();
   updateGameStatus();
+  updateBetsOnSvg();
 }
 
-export function setBets() {
-  bets = [];
+function setOddsBets() {
   _.forEach(players, p => {
     const strategy = findBettingStrategyById(p.strategyId);
-    const sBets = strategy.createNewBets(p);
+    const oBets = strategy.createOddsBets(p, currentPoint);
+    const totalBet = _.sumBy(oBets, 'amount');
+    p.balance -= totalBet;
+    bets.push(...oBets);
+  });
+}
+
+function setOnBets() {
+  _.forEach(players, p => {
+    const strategy = findBettingStrategyById(p.strategyId);
+    const sBets = strategy.createOnBets(p);
     const totalBet = _.sumBy(sBets, 'amount');
     p.balance -= totalBet;
     bets.push(...sBets);
   });
+  comeBetsPlaced = true;
+}
+
+export function placeBets() {
+  if (!isOn) {
+    // bets = [];
+    _.forEach(players, p => {
+      const strategy = findBettingStrategyById(p.strategyId);
+      const sBets = strategy.createNewBets(p);
+      const totalBet = _.sumBy(sBets, 'amount');
+      p.balance -= totalBet;
+      bets.push(...sBets);
+    });
+    comeBetsPlaced = false;
+  }
   betsPlaced = true;
   canRoll = true;
   console.log('bets', bets);
@@ -307,7 +342,11 @@ export function doRoll() {
   // Update the table based on the roll results
   setCurrentPoint(rollSum);
   processRoll(rollSum);
-
+  if ((comeOutRoll) && (currentPoint > 0)) {
+    console.log('set on and odds bets now', currentPoint);
+    setOddsBets();
+    setOnBets();
+  }
   canRoll = isOn || betsPlaced;
   updateTable();
 }
@@ -322,7 +361,7 @@ export function run(n) {
         doRoll();
         roll++;
       } else {
-        setBets();
+        placeBets();
       }
       rolling = false;
       updateButtons();

@@ -5,7 +5,7 @@ export const players = [
     balance: 1000,
     strategyId: 2,
     color: '#da0',
-    posX: 100,
+    posX: 25,
   },
   {
     id: 2,
@@ -13,6 +13,6 @@ export const players = [
     balance: 100,
     strategyId: 1,
     color: '#44d',
-    posX: 200,
+    posX: -25,
   }
 ];

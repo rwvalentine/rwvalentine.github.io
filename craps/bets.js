@@ -1,11 +1,18 @@
 import { betTypes, oddsLookup } from './bet-types.js';
+import { players } from './players.js';
 
 class Bet {
-  constructor(type, amount, playerId) {
+  constructor(type, amount, playerId, point = 0) {
+    const betType = betTypes.find((bt) => bt.type === type);
+    const player = players.find((p) => p.id === playerId);
     this.type = type;
     this.amount = amount;
-    this.history = [];
     this.playerId = playerId;
+    this.posX = betType.posX + player.posX;
+    this.posY = betType.posY
+    this.color = player.color;
+    this.point = point || betType.point;
+    this.history = [];
   }
 
   // Additional methods for the Bet class can be added here if needed

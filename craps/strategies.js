@@ -43,18 +43,23 @@ class Strategy {
   createNewBets(player) {
     const bets = [];
     // Create bets according to the player's strategy
+    if (this.passLine) {
+      const betAmount = this.openingBet(player.balance);
+      const bet = new Bet(bt.PASS, betAmount, player.id);
+      this.initPassBet = betAmount;
+      bets.push(bet);
+    }
+    return bets;
+  }
+
+  createOnBets(player) {
+    const bets = [];
     for (const betType of Object.keys(this.placeBets)) {
       if (this.placeBets[betType]) {
         const betAmount = this.openingBet(player.balance);
         const bet = new Bet(betType, betAmount, player.id);
         bets.push(bet);
       }
-    }
-    if (this.passLine) {
-      const betAmount = this.openingBet(player.balance);
-      const bet = new Bet(bt.PASS, betAmount, player.id);
-      this.initPassBet = betAmount;
-      bets.push(bet);
     }
     if (this.comeBets) {
       const betAmount = this.openingBet(player.balance);
