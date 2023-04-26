@@ -252,11 +252,11 @@ function clearRollHistory() {
 }
 
 function updateOnOffIndicator() {
-  let indicatorX = 800;
-  let indicatorY = 50;
+  let indicatorX = 750;
+  let indicatorY = 32;
   if (currentPoint > 0) {
     indicatorX = bt.pointPosX[currentPoint];
-    indicatorY = 80;
+    indicatorY = 70;
   }
   const onOffIndicator = getSvgElementById("on-off-indicator");
   const onOffText = getSvgElementById("on-off-text");
@@ -265,10 +265,10 @@ function updateOnOffIndicator() {
   onOffText.setAttribute("x", indicatorX);
   onOffText.setAttribute("y", indicatorY+8);
   if (isOn) {
-    onOffIndicator.setAttribute("fill", "green");
+    onOffIndicator.setAttribute("fill", "#080");
       onOffText.textContent = "ON";
   } else {
-      onOffIndicator.setAttribute("fill", "red");
+      onOffIndicator.setAttribute("fill", "#800");
       onOffText.textContent = "OFF";
   }
   onOffIndicator.setAttribute("display", "inline");
