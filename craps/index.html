@@ -20,21 +20,25 @@
       <div id="craps-table">
         <object id="craps-table-svg" data="craps-table.svg" type="image/svg+xml"></object>
       </div>
-      <div style="position: absolute; top: 50px; left: 10px; width: 400px; padding: 8px;">
-        <button id="throw-dice-button">Throw</button>
-        <select id="run-select">
-          <option value="1">1</option>
-          <option value="10">10</option>
-          <option value="100">100</option>
-          <option value="1000">1000</option>
-        </select>
-        <button id="stop-button">Stop</button>
-        <div id="session-info"></div>
+      <div style="position: absolute; top: 50px; left: 10px; width: 300px; padding: 8px;">
+        <div style="width: 200px; float: left;">
+          <button id="throw-dice-button">Throw</button>
+          <select id="run-select">
+            <option value="1">1</option>
+            <option value="10">10</option>
+            <option value="100">100</option>
+            <option value="1000">1000</option>
+          </select>
+        </div>
+        <button id="stop-button" style="visibility: visible;">Stop</button>
       </div>
       <div style="display: flex; justify-content: space-around;">
         <div  id="players-info" class="info-box" style="background-color: #121;"></div>
         <div id="div-roll-history" class="info-box" style="background-color: #332;"></div>
-        <div id="div-status" class="info-box" style="background-color: #333;"></div>
+        <div class="info-box" style="background-color: #333;">
+          <div id="session-info"></div><br>
+          <div id="div-status"></div>
+        </div>
       </div>
     </div>
   </div>

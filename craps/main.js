@@ -73,7 +73,6 @@ function updateStrategy(strategyId) {
   localStorage.setItem('strategies', JSON.stringify(strategies));
 }
 
-
 function setupStrategyForm() {
   const strategySelect = document.getElementById('strategy-select');
   // add strategies to dropdown
