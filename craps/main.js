@@ -1,24 +1,20 @@
 import { strategies } from './strategies.js';
-import { makeBets, doRoll, run } from './craps-simulator.js';
+import { makePassBets, doThrow, run, stopRoll } from './craps-simulator.js';
 
 document.getElementById("set-bets-button").addEventListener("click", () => {
-  makeBets();
+  makePassBets();
 });
 
-document.getElementById("roll-dice-button").addEventListener("click", () => {
-  doRoll();
+document.getElementById("stop-button").addEventListener("click", () => {
+  stopRoll();
 });
 
-document.getElementById("run10").addEventListener("click", () => {
-  run(10);
-});
 
-document.getElementById("run100").addEventListener("click", () => {
-  run(100);
-});
-
-document.getElementById("run1000").addEventListener("click", () => {
-  run(1000);
+document.getElementById("throw-dice-button").addEventListener("click", () => {
+  const runSelect = document.getElementById("run-select");
+  const n = parseInt(runSelect.value);
+  run(n);
+  // doThrow();
 });
 
 const strategyTabButton = document.getElementById('strategy-tab-button');
@@ -126,4 +122,5 @@ document.addEventListener("DOMContentLoaded", function () {
   // Your code that references the strategies variable
   showTab(svgTab);
   loadForms();
+  // makePassBets();
 });

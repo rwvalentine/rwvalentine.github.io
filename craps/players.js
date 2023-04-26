@@ -6,7 +6,7 @@ export const players = [
     strategyId: 2,
     color: '#da0',
     posX: 25,
-    session: { games: 0, rolls: 0, won: 0, lost: 0 },
+    session: { throws: 0, rolls: 0, won: 0, lost: 0 },
   },
   {
     id: 2,
@@ -15,6 +15,6 @@ export const players = [
     strategyId: 1,
     color: '#44d',
     posX: -25,
-    session: { games: 0, rolls: 0, won: 0, lost: 0 },
+    session: { throws: 0, rolls: 0, won: 0, lost: 0 },
   },
 ];

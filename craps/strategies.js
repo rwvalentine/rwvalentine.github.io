@@ -40,16 +40,15 @@ class Strategy {
     return betAmount;
   }
 
-  createNewBets(player) {
-    const bets = [];
+  createPassBet(player) {
+    let bet;
     // Create bets according to the player's strategy
     if (this.passLine) {
       const betAmount = this.openingBet(player.balance);
-      const bet = new Bet(bt.PASS, betAmount, player.id);
+      bet = new Bet(bt.PASS, betAmount, player.id);
       this.initPassBet = betAmount;
-      bets.push(bet);
     }
-    return bets;
+    return bet;
   }
 
   createOnBets(player) {
@@ -83,15 +82,15 @@ class Strategy {
     return bet;
   }
 
-  createComeOddsBet(player, rollSum) {
-    console.log('createComeOddsBet rollSum', rollSum);
+  createComeOddsBet(player, throwSum) {
+    console.log('createComeOddsBet throwSum', throwSum);
     let bet;
     if (this.oddsCome) {
       let betAmount = this.initComeBet;
       if (this.maxOddsMultiple) {
-        betAmount = betAmount * oddsMultiples[rollSum];
+        betAmount = betAmount * oddsMultiples[throwSum];
       }
-      bet = new Bet(bt.ODDS_COME, betAmount, player.id, rollSum);
+      bet = new Bet(bt.ODDS_COME, betAmount, player.id, throwSum);
     }
     return bet;
   }

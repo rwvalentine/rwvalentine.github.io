@@ -5,20 +5,21 @@ import { Bet, payout } from './bets.js';
 import { strategies } from './strategies.js';
 
 let currentPoint = 0;
-let comeOutRoll = true;
+let comeOutThrow = true;
 let madePoint = false;
 let die1 = 0;
 let die2 = 0;
 
 export let isOn = false;
+let stop = false;
 
-let betsPlaced = false;
+let passBetsPlaced = false;
 let onBetsPlaced = false;
-let canRoll = false;
-let gameOver = true;
-let gameCount = 0;
+let canThrow = false;
+let rollOver = true;
+let throwCount = 0
 let rollCount = 0;
-let rolling = false;
+let throwing = false;
 
 let bets = [];
 
@@ -60,11 +61,11 @@ function updateBetsOnSvg() {
   }
 }
 
-function processRoll(rollSum) {
-  console.log('processRoll', bets, rollSum, currentPoint, comeOutRoll);
-  gameOver = !isOn || rollSum === 7 || madePoint;
-  betsPlaced = !gameOver;
-  const checkFirstRoll = (rs, b) => {
+function processThrow(throwSum) {
+  console.log('processThrow', bets, throwSum, currentPoint, comeOutThrow);
+  rollOver = !isOn || throwSum === 7 || madePoint;
+  passBetsPlaced = !rollOver;
+  const checkFirstThrow = (rs, b) => {
     let w = 0;
     if (rs === 7 || rs === 11) {
       w = payout(b);
@@ -73,13 +74,13 @@ function processRoll(rollSum) {
     }
     return w;
   }
-  const sevenOut = !comeOutRoll && (rollSum === 7);
+  const sevenOut = !comeOutThrow && (throwSum === 7);
   bets.forEach((bet) => {
     const player = findPlayerById(bet.playerId);
     let win = 0;
     if (bet.type === bt.PASS) {
-      if (comeOutRoll) {
-        win = checkFirstRoll(rollSum, bet);
+      if (comeOutThrow) {
+        win = checkFirstThrow(throwSum, bet);
       } else {
         if (sevenOut) {
           win = -bet.amount;
@@ -88,27 +89,27 @@ function processRoll(rollSum) {
         }
       }
     } else if (bet.type === bt.COME) {
-      if (comeOutRoll) {
-        console.log('cannot place COME bet on comeout roll');
+      if (comeOutThrow) {
+        console.log('cannot place COME bet on comeout throw');
       } else {
         if (!(bet.point > 0)) {
-          win = checkFirstRoll(rollSum, bet);
+          win = checkFirstThrow(throwSum, bet);
           if (win === 0) {
-            bet.point = rollSum;
-            bet.posX = bt.pointPosX[rollSum] + player.posX;
+            bet.point = throwSum;
+            bet.posX = bt.pointPosX[throwSum] + player.posX;
             bet.posY = 230;
             console.log('xxxx set come odds bets here?');
-            setComeOddsBet(player, rollSum);
+            makeComeOddsBet(player, throwSum);
           }
         } else if (sevenOut) {
           win = -bet.amount;
-        } else if (rollSum === bet.point) {
+        } else if (throwSum === bet.point) {
           win = payout(bet);
         }
       }
     } else if (bet.type === bt.ODDS_PASS) {
-      if (comeOutRoll) {
-        console.log('no pass odds for comeout roll!');
+      if (comeOutThrow) {
+        console.log('no pass odds for comeout throw!');
       } else {
         if (sevenOut) {
           win = -bet.amount;
@@ -117,19 +118,19 @@ function processRoll(rollSum) {
         }
       }
     } else if (bet.type === bt.ODDS_COME) {
-      if (comeOutRoll) {
-        console.log('no come odds for comeout roll!');
+      if (comeOutThrow) {
+        console.log('no come odds for comeout throw!');
       } else {
         if (sevenOut) {
           win = -bet.amount;
-        } else if (rollSum === bet.point) {
+        } else if (throwSum === bet.point) {
           win = payout(bet, bet.point);
         }
       }
     } else { // place
-      if (rollSum === 7) {
+      if (throwSum === 7) {
         win = -bet.amount;
-      } else if (rollSum === bet.point) {
+      } else if (throwSum === bet.point) {
         win = payout(bet);
       }
     }
@@ -146,11 +147,11 @@ function processRoll(rollSum) {
     }
     bet.outcome = outcome;
 
-    // if (gameOver) {
+    // if (rollOver) {
     //   player.balance += bet.amount;
     // }
     if (win !== 0) {
-      console.log(player.name, bet.type, outcome, win);
+      addRollHistory(`${player.name} ${bet.type} ${outcome} ${win}`);
     }
   });
   if (sevenOut) {
@@ -159,8 +160,8 @@ function processRoll(rollSum) {
 
   // remove losers
   bets = _.filter(bets, b => b.outcome !== 'lose');
-  if (gameOver) { // remove pass bets
-    gameCount++;
+  if (rollOver) { // remove pass bets
+    rollCount++;
     // remove remaining pass and pass odds
     bets = _.filter(bets, b => {
       const isPass = [bt.PASS, bt.ODDS_PASS].includes(b.type);
@@ -213,29 +214,33 @@ function updatePlayerInfo() {
 function updateSessionInfo() {
     const sessionInfoDiv = document.getElementById("session-info");
     sessionInfoDiv.innerHTML = `
-    Games: ${gameCount}<br>
-    Rolls: ${rollCount}<br>`;
+    Rolls: ${rollCount}<br>
+    Throws: ${throwCount}<br>`;
 }
 
-function updateGameStatus() {
-    const statusDiv = document.getElementById('game-status');
+function updateRollStatus() {
+    const statusDiv = document.getElementById('div-status');
     statusDiv.innerHTML = `
     currentPoint = ${currentPoint}<br>
-    comeOutRoll = ${comeOutRoll}<br>
+    comeOutThrow = ${comeOutThrow}<br>
     madePoint = ${madePoint}<br>
     isOn = ${isOn}<br>
-    betsPlaced = ${betsPlaced}<br>
+    passBetsPlaced = ${passBetsPlaced}<br>
     onBetsPlaced = ${onBetsPlaced}<br>
-    canRoll = ${canRoll}<br>
-    gameOver = ${gameOver}<br>
+    canThrow = ${canThrow}<br>
+    rollOver = ${rollOver}<br>
     `;
 }
 
-function displayCurrentRoll(diceResult) {
-    const currentRollDiv = document.getElementById("current-roll");
-    currentRollDiv.textContent = `Current Roll: ${diceResult.die1} + ${diceResult.die2} = ${diceResult.die1 + diceResult.die2}`;
+function addRollHistory(txt) {
+    const divH = document.getElementById("div-roll-history");
+    divH.innerHTML += `${txt}<br>`;
 }
 
+function clearRollHistory() {
+    const divH = document.getElementById("div-roll-history");
+    divH.innerHTML = `New Roll ${rollCount + 1}<br>`;
+}
 
 function updateOnOffIndicator() {
   let indicatorX = 800;
@@ -262,33 +267,28 @@ function updateOnOffIndicator() {
 }
 
 function updateButtons() {
-  const rollDiceButton = document.getElementById('roll-dice-button');
+  const throwDiceButton = document.getElementById('throw-dice-button');
   const placeBetsButton = document.getElementById('set-bets-button');
-  const run10Btn = document.getElementById('run10');
-  const run100Btn = document.getElementById('run100');
-  const run1000Btn = document.getElementById('run1000');
-  rollDiceButton.disabled = !canRoll || rolling;
-  run10Btn.disabled = rolling;
-  run100Btn.disabled = rolling;
-  run1000Btn.disabled = rolling;
-  placeBetsButton.disabled = betsPlaced;
+  // throwDiceButton.disabled = !canThrow || throwing;
+  throwDiceButton.disabled = throwing;
+  placeBetsButton.disabled = passBetsPlaced;
 }
 
-function setCurrentPoint(rollSum) {
+function setCurrentPoint(throwSum) {
   if (!isOn) {
-    comeOutRoll = true;
+    comeOutThrow = true;
     madePoint = false;
-    if (rollSum === 7 || rollSum === 11 || rollSum === 2 || rollSum === 3 || rollSum === 12) {
+    if (throwSum === 7 || throwSum === 11 || throwSum === 2 || throwSum === 3 || throwSum === 12) {
       currentPoint = 0;
     } else {
       isOn = true;
-      currentPoint = rollSum;
+      currentPoint = throwSum;
     }
   } else {
-    comeOutRoll = false;
-    madePoint = rollSum === currentPoint;
-    // If the game is on, only update the isOn status when a 7 or the current point is rolled.
-    if (rollSum === 7 || rollSum === currentPoint) {
+    comeOutThrow = false;
+    madePoint = throwSum === currentPoint;
+    // If the roll is on, only update the isOn status when a 7 or the current point is throwed.
+    if (throwSum === 7 || throwSum === currentPoint) {
       isOn = false;
       currentPoint = 0;
     }
@@ -297,11 +297,11 @@ function setCurrentPoint(rollSum) {
   updateOnOffIndicator();
 }
 
-function rollDice() {
-  canRoll = false;
+function throwDice() {
+  canThrow = false;
   die1 = Math.floor(Math.random() * 6) + 1;
   die2 = Math.floor(Math.random() * 6) + 1;
-  rollCount++;
+  throwCount++;
   const die1Text = getSvgElementById('die1-text');
   die1Text.textContent = die1;
   const die2Text = getSvgElementById('die2-text');
@@ -312,91 +312,108 @@ function updateTable() {
   updateButtons();
   updatePlayerInfo();
   updateSessionInfo();
-  updateGameStatus();
+  updateRollStatus();
   updateBetsOnSvg();
 }
 
-function setPassOddsBets() {
+function makePassOddsBets() {
   _.forEach(players, p => {
     const strategy = findBettingStrategyById(p.strategyId);
     const bet = strategy.createPassOddsBet(p, currentPoint);
     if (bet) {
       p.balance -= bet.amount;
       bets.push(bet);
+      addRollHistory(`${p.name} bet ${bet.type} ${bet.amount}`);
     }
   });
 }
 
-function setComeOddsBet(player, rollSum) {
+function makeComeOddsBet(player, throwSum) {
     const strategy = findBettingStrategyById(player.strategyId);
-    const bet = strategy.createComeOddsBet(player, rollSum);
+    const bet = strategy.createComeOddsBet(player, throwSum);
     if (bet) {
       player.balance -= bet.amount;
       bets.push(bet);
+      addRollHistory(`${player.name} bet ${bet.type} ${bet.amount}`);
     }
 }
 
-function setOnBets() {
+function makeOnBets() {
   _.forEach(players, p => {
     const strategy = findBettingStrategyById(p.strategyId);
-    const sBets = strategy.createOnBets(p);
-    const totalBet = _.sumBy(sBets, 'amount');
+    const oBets = strategy.createOnBets(p);
+    const totalBet = _.sumBy(oBets, 'amount');
     p.balance -= totalBet;
-    bets.push(...sBets);
+    _.forEach(oBets, bet => {
+      addRollHistory(`${p.name} bet ${bet.type} ${bet.amount}`);
+      bets.push(bet);
+    })
   });
 }
 
-export function makeBets() {
+export function makePassBets() {
   if (!isOn) {
     // bets = [];
     _.forEach(players, p => {
       const strategy = findBettingStrategyById(p.strategyId);
-      const sBets = strategy.createNewBets(p);
-      const totalBet = _.sumBy(sBets, 'amount');
-      p.balance -= totalBet;
-      bets.push(...sBets);
+      const bet = strategy.createPassBet(p);
+      if (bet) {
+        p.balance -= bet.amount;
+        bets.push(bet);
+        addRollHistory(`${p.name} bet ${bet.type} ${bet.amount}`);
+      }
     });
+    console.log('new player now? pass bets', bets);
+  } else {
+    console.log('no pass bets when on');
   }
-  betsPlaced = true;
-  canRoll = true;
-  console.log('bets', bets);
+  passBetsPlaced = true;
+  canThrow = true;
   updateBetsOnSvg();
   updateTable();
 }
 
-export function doRoll() {
-  rollDice();
-  const rollSum = die1 + die2;
-  // Update the table based on the roll results
-  setCurrentPoint(rollSum);
-  processRoll(rollSum);
-  if ((comeOutRoll) && (currentPoint > 0)) {
+export function doThrow() {
+  throwDice();
+  const throwSum = die1 + die2;
+  addRollHistory(`throw ${die1} ${die2}`)
+  // Update the table based on the throw results
+  setCurrentPoint(throwSum);
+  processThrow(throwSum);
+  if ((comeOutThrow) && (currentPoint > 0)) {
     console.log('set odds bets now', currentPoint);
-    setPassOddsBets();
+    makePassOddsBets();
   }
-  if ((comeOutRoll) && (currentPoint > 0) && !onBetsPlaced) {
+  if ((comeOutThrow) && (currentPoint > 0) && !onBetsPlaced) {
     console.log('set on bets now', currentPoint);
-    setOnBets();
+    makeOnBets();
     onBetsPlaced = true;
   }
-  canRoll = isOn || betsPlaced;
+  canThrow = isOn || passBetsPlaced;
   updateTable();
 }
 
-export function run(n) {
-  let roll = 0;
-  rolling = true;
+export function stopRoll() {
+  stop = true;
+}
+
+export function run(n, count = 0) {
+  const delay = 1000 / ( 1 + Math.log(n));
+  throwing = true;
   updateButtons();
-  setTimeout( () => {
-    while (roll < n) {
-      if (betsPlaced) {
-        doRoll();
-        roll++;
-      } else {
-        makeBets();
-      }
-      rolling = false;
-      updateButtons();
-      console.log(`roll ${roll + 1} done`);
-    }}, 100);
+  if (!stop && (count < n)) {
+    if (!passBetsPlaced) {
+      clearRollHistory();
+      makePassBets();
+      setTimeout(() => run(n, count), delay);
+    } else {
+      doThrow();
+      setTimeout(() => run(n, count + 1), delay);
+    }
+  } else {
+    stop = false;
+    throwing = false;
+    updateButtons();
+    console.log(`throw ${count} done`);
+  }
 }

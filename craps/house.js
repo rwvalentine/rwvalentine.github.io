@@ -6,3 +6,5 @@ export const oddsMultiples = {
   9: 4,
   10: 3,
 };
+
+export const throwsPerHour = 120;

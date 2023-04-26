@@ -16,25 +16,27 @@
   </div>
 
   <div id="svg-tab" class="tab">
-    <div id="craps-table" style="float: left;">
+    <div id="craps-table">
       <object id="craps-table-svg" data="craps-table.svg" type="image/svg+xml"></object>
     </div>
-    <div style="float: left; padding: 8px;">
-      <button id="set-bets-button">Place Bets</button>
-      <button id="roll-dice-button" disabled>Roll</button>
-      <button id="run10">Roll 10</button>
-      <button id="run100">Roll 100</button>
-      <button id="run1000">Roll 1000</button>
+    <div style="position: absolute; top: 50px; left: 10px; padding: 8px;">
+      <button id="set-bets-button" hidden>Place Bets</button>
+      <button id="throw-dice-button">Throw</button>
+      <select id="run-select">
+        <option value="1">1</option>
+        <option value="10">10</option>
+        <option value="100">100</option>
+        <option value="1000">1000</option>
+      </select>
+      <button id="stop-button">Stop</button>
       <div id="session-info"></div>
     </div>
-    <div  id="players-info" style="float: left; width: 300px; text-align: left; padding: 8px;">
-    </div>
-    <div id="game-status" style="float: left; width: 200px; text-align: left; padding: 8px; background-color: #aaa;">
-    </div>
+    <div  id="players-info" style="float: left; width: 250px; text-align: left; padding: 8px; background-color: #dfd; overflow-y: scroll; height: 250px;"></div>
+    <div id="div-roll-history" style="float: left; width: 250px; text-align: left; padding: 8px; background-color: #ffd; overflow-y: scroll; height: 250px;"></div>
+    <div id="div-status" style="float: left; width: 150px; text-align: left; padding: 8px; background-color: #aaa;"></div>
   </div>
   <div id="strategy-tab" class="tab">
-    <div id="stategy-form-container">
-    </div>
+    <div id="stategy-form-container"></div>
   </div>
 
   <script src="craps-simulator.js" type="module" defer></script>
