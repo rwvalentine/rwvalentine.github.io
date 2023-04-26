@@ -1,4 +1,4 @@
-import { betTypes, oddsLookup } from './bet-types.js';
+import { betTypes, oddsLookup, pointPosX } from './bet-types.js';
 import { players } from './players.js';
 
 class Bet {
@@ -8,10 +8,17 @@ class Bet {
     this.type = type;
     this.amount = amount;
     this.playerId = playerId;
-    this.posX = betType.posX + player.posX;
+    this.point = point || betType.point;
+    if (!(betType.posX > 0)) {
+      this.posX = 400;
+      if (this.point > 0) {
+        this.posX = pointPosX[this.point] + player.posX;
+      }
+    } else {
+      this.posX = betType.posX + player.posX;
+    }
     this.posY = betType.posY
     this.color = player.color;
-    this.point = point || betType.point;
     this.history = [];
   }
 

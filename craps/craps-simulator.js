@@ -97,6 +97,8 @@ function processRoll(rollSum) {
             bet.point = rollSum;
             bet.posX = bt.pointPosX[rollSum] + player.posX;
             bet.posY = 230;
+            console.log('xxxx set come odds bets here?');
+            setComeOddsBet(player, rollSum);
           }
         } else if (sevenOut) {
           win = -bet.amount;
@@ -104,13 +106,23 @@ function processRoll(rollSum) {
           win = payout(bet);
         }
       }
-    } else if ((bet.type === bt.ODDS_COME) || (bet.type === bt.ODDS_PASS)) {
+    } else if (bet.type === bt.ODDS_PASS) {
       if (comeOutRoll) {
-        console.log('no odds for comeout roll!');
+        console.log('no pass odds for comeout roll!');
       } else {
         if (sevenOut) {
           win = -bet.amount;
         } else if (madePoint) {
+          win = payout(bet, bet.point);
+        }
+      }
+    } else if (bet.type === bt.ODDS_COME) {
+      if (comeOutRoll) {
+        console.log('no come odds for comeout roll!');
+      } else {
+        if (sevenOut) {
+          win = -bet.amount;
+        } else if (rollSum === bet.point) {
           win = payout(bet, bet.point);
         }
       }
@@ -137,11 +149,13 @@ function processRoll(rollSum) {
     // if (gameOver) {
     //   player.balance += bet.amount;
     // }
-    if (sevenOut) {
-      onBetsPlaced = false;
+    if (win !== 0) {
+      console.log(player.name, bet.type, outcome, win);
     }
-    console.log(player.name, bet.type, outcome, win);
   });
+  if (sevenOut) {
+    onBetsPlaced = false;
+  }
 
   // remove losers
   bets = _.filter(bets, b => b.outcome !== 'lose');
@@ -302,14 +316,24 @@ function updateTable() {
   updateBetsOnSvg();
 }
 
-function setOddsBets() {
+function setPassOddsBets() {
   _.forEach(players, p => {
     const strategy = findBettingStrategyById(p.strategyId);
-    const oBets = strategy.createOddsBets(p, currentPoint);
-    const totalBet = _.sumBy(oBets, 'amount');
-    p.balance -= totalBet;
-    bets.push(...oBets);
+    const bet = strategy.createPassOddsBet(p, currentPoint);
+    if (bet) {
+      p.balance -= bet.amount;
+      bets.push(bet);
+    }
   });
+}
+
+function setComeOddsBet(player, rollSum) {
+    const strategy = findBettingStrategyById(player.strategyId);
+    const bet = strategy.createComeOddsBet(player, rollSum);
+    if (bet) {
+      player.balance -= bet.amount;
+      bets.push(bet);
+    }
 }
 
 function setOnBets() {
@@ -348,7 +372,7 @@ export function doRoll() {
   processRoll(rollSum);
   if ((comeOutRoll) && (currentPoint > 0)) {
     console.log('set odds bets now', currentPoint);
-    setOddsBets();
+    setPassOddsBets();
   }
   if ((comeOutRoll) && (currentPoint > 0) && !onBetsPlaced) {
     console.log('set on bets now', currentPoint);

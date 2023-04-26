@@ -37,5 +37,5 @@ export const betTypes = [
   { type: PLACE_9, point: 9, posY: 120, posX: pointPosX[9], odds: 7/5 },
   { type: PLACE_10, point: 10, posY: 120, posX: pointPosX[10], odds: 9/5 },
   { type: ODDS_PASS, posY: 520, posX: 500, odds: oddsLookup },
-  { type: ODDS_COME, posY: 440, posX: 500, odds: oddsLookup },
+  { type: ODDS_COME, posY: 200 },
 ];

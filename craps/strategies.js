@@ -70,21 +70,32 @@ class Strategy {
     return bets;
   }
 
-  createOddsBets(player, currentPoint) {
-    console.log('createOddsBets curpnt', currentPoint);
-    const bets = [];
+  createPassOddsBet(player, currentPoint) {
+    console.log('createPassOddsBet curpnt', currentPoint);
+    let bet;
     if (this.oddsPass) {
       let betAmount = this.initPassBet;
       if (this.maxOddsMultiple) {
         betAmount = betAmount * oddsMultiples[currentPoint];
       }
-      const bet = new Bet(bt.ODDS_PASS, betAmount, player.id, currentPoint);
-      bets.push(bet);
+      bet = new Bet(bt.ODDS_PASS, betAmount, player.id, currentPoint);
     }
-    return bets;
+    return bet;
+  }
+
+  createComeOddsBet(player, rollSum) {
+    console.log('createComeOddsBet rollSum', rollSum);
+    let bet;
+    if (this.oddsCome) {
+      let betAmount = this.initComeBet;
+      if (this.maxOddsMultiple) {
+        betAmount = betAmount * oddsMultiples[rollSum];
+      }
+      bet = new Bet(bt.ODDS_COME, betAmount, player.id, rollSum);
+    }
+    return bet;
   }
 }
-
 
 let strategies = [];
 
