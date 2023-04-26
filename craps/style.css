@@ -1,3 +1,102 @@
+/* General styles */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #222;
+  color: #fff;
+}
+
+form {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+label {
+  display: inline-block;
+  font-size: 1.1em;
+  margin: 0.25em 0;
+  vertical-align: middle;
+}
+
+input[type="text"],
+input[type="number"] {
+  display: inline-block;
+  width: 50%;
+  padding: 0.5em;
+  background-color: #333;
+  border: 1px solid #555;
+  color: #fff;
+  font-size: 1em;
+  vertical-align: middle;
+  float: right;
+}
+
+input[type="checkbox"] {
+  margin-left: 0.2em;
+  margin-right: 0.5em;
+  vertical-align: middle;
+}
+
+input[type="submit"],
+button {
+  display: inline-block;
+  padding: 0.5em 1em;
+  background-color: #445;
+  border: 1px solid #555;
+  color: #fff;
+  font-size: 1em;
+  font-weight: bold;
+  text-align: center;
+  text-decoration: none;
+  vertical-align: middle;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+input[type="submit"]:hover,
+button:hover {
+  background-color: #667;
+}
+
+select {
+  display: inline-block;
+  padding: 0.25em 0.5em;
+  background-color: #445;
+  border: 1px solid #555;
+  color: #fff;
+  font-size: 1em;
+  font-weight: bold;
+  text-align: center;
+  vertical-align: middle;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+select:hover {
+  background-color: #667;
+}
+/* Responsive design for smaller screens */
+@media screen and (max-width: 480px) {
+  label {
+    font-size: 1em;
+  }
+
+  input[type="text"],
+  input[type="number"] {
+    font-size: 0.9em;
+  }
+}
+
+.info-box {
+  font-size: 0.8em;
+  float: left;
+  width: 250px;
+  text-align: left;
+  padding: 8px;
+  overflow-y: auto;
+  height: 250px;
+  border: 1px solid white;
+}
+
 .tab {
   display: none;
 }

@@ -35,15 +35,15 @@ const players = [
     posX: 25,
     session: { throws: 0, rolls: 0, won: 0, lost: 0 },
   }),
-  // new Player({
-  //   id: 2,
-  //   name: 'Player 2',
-  //   balance: 100,
-  //   strategyId: 1,
-  //   color: '#44d',
-  //   posX: -25,
-  //   session: { throws: 0, rolls: 0, won: 0, lost: 0 },
-  // }),
+  new Player({
+    id: 2,
+    name: 'Player 2',
+    balance: 100,
+    strategyId: 1,
+    color: '#44d',
+    posX: -25,
+    session: { throws: 0, rolls: 0, won: 0, lost: 0 },
+  }),
 ];
 
 export { Player, players };

@@ -16,23 +16,27 @@
   </div>
 
   <div id="svg-tab" class="tab">
-    <div id="craps-table">
-      <object id="craps-table-svg" data="craps-table.svg" type="image/svg+xml"></object>
+    <div style="text-align: center">
+      <div id="craps-table">
+        <object id="craps-table-svg" data="craps-table.svg" type="image/svg+xml"></object>
+      </div>
+      <div style="position: absolute; top: 50px; left: 10px; padding: 8px;">
+        <button id="throw-dice-button">Throw</button>
+        <select id="run-select">
+          <option value="1">1</option>
+          <option value="10">10</option>
+          <option value="100">100</option>
+          <option value="1000">1000</option>
+        </select>
+        <button id="stop-button">Stop</button>
+        <div id="session-info"></div>
+      </div>
+      <div style="display: flex; justify-content: space-around;">
+        <div  id="players-info" class="info-box" style="background-color: #121;"></div>
+        <div id="div-roll-history" class="info-box" style="background-color: #332;"></div>
+        <div id="div-status" class="info-box" style="background-color: #333;"></div>
+      </div>
     </div>
-    <div style="position: absolute; top: 50px; left: 10px; padding: 8px;">
-      <button id="throw-dice-button">Throw</button>
-      <select id="run-select">
-        <option value="1">1</option>
-        <option value="10">10</option>
-        <option value="100">100</option>
-        <option value="1000">1000</option>
-      </select>
-      <button id="stop-button">Stop</button>
-      <div id="session-info"></div>
-    </div>
-    <div  id="players-info" style="float: left; width: 250px; text-align: left; padding: 8px; background-color: #dfd; overflow-y: scroll; height: 250px;"></div>
-    <div id="div-roll-history" style="float: left; width: 250px; text-align: left; padding: 8px; background-color: #ffd; overflow-y: scroll; height: 250px;"></div>
-    <div id="div-status" style="float: left; width: 150px; text-align: left; padding: 8px; background-color: #aaa;"></div>
   </div>
   <div id="strategy-tab" class="tab">
     <div id="stategy-form-container"></div>
