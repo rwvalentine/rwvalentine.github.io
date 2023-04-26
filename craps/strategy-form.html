@@ -1,23 +1,21 @@
 <form id="strategy-form">
-  <label for="strategy-select">Select strategy:</label>
+  <label for="strategy-select">Strategy:</label>
   <select id="strategy-select">
-    <option>select one</option>
+    <option value="" disabled selected>Select strategy...</option>
     <!-- Options will be populated using JavaScript -->
   </select>
-  <br>
+  <br><br>
 
   <label for="strategy-name">Strategy Name:</label>
   <input type="text" id="strategy-name" name="strategy-name"><br><br>
 
   <label for="pass-line">Pass Line:</label>
-  <input type="checkbox" id="pass-line" name="pass-line"><br><br>
-
+  <input type="checkbox" id="pass-line" name="pass-line">
   <label for="odds-pass">Odds Pass:</label>
   <input type="checkbox" id="odds-pass" name="odds-pass"><br><br>
 
   <label for="come-bets">Come Bets:</label>
-  <input type="checkbox" id="come-bets" name="come-bets"><br><br>
-
+  <input type="checkbox" id="come-bets" name="come-bets">
   <label for="odds-come">Odds Come:</label>
   <input type="checkbox" id="odds-come" name="odds-come"><br><br>
 
@@ -55,5 +53,5 @@
 
   <label for="pressing-options">Pressing Options:</label>
   <input type="text" id="pressing-options" name="pressing-options"><br><br>
-  <input type="submit" value="Update Strategy">
+  <input type="submit" value="Update Strategy" disabled>
 </form>
