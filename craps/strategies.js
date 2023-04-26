@@ -23,6 +23,7 @@ class Strategy {
     this.maxBet = options.maxBet;
     this.flatBetAmount = options.flatBetAmount;
     this.percentBetAmount = options.percentBetAmount;
+    this.maxActiveBets = options.maxActiveBets || 4;
     this.pressingOptions = options.pressingOptions;
     this.initPassBet = 0;
     this.initComeBet = 0;

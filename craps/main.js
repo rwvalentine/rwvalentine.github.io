@@ -1,10 +1,6 @@
 import { strategies } from './strategies.js';
 import { makePassBets, doThrow, run, stopRoll } from './craps-simulator.js';
 
-document.getElementById("set-bets-button").addEventListener("click", () => {
-  makePassBets();
-});
-
 document.getElementById("stop-button").addEventListener("click", () => {
   stopRoll();
 });
@@ -54,6 +50,7 @@ function updateFormFields(strategyId) {
   for (const placeBetKey in strategy.placeBets) {
     document.getElementById(placeBetKey).checked = strategy.placeBets[placeBetKey];
   }
+  document.getElementById('max-active-bets').value = strategy.maxActiveBets;
 }
 
 function updateStrategy(strategyId) {
@@ -71,6 +68,7 @@ function updateStrategy(strategyId) {
   for (const placeBetKey in strategy.placeBets) {
     strategy.placeBets[placeBetKey] = document.getElementById(placeBetKey).checked;
   }
+  strategy.maxActiveBets = parseFloat(document.getElementById('max-active-bets').value);
   console.log('update strategy', strategies);
   localStorage.setItem('strategies', JSON.stringify(strategies));
 }

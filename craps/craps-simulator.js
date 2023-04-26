@@ -15,7 +15,6 @@ let stop = false;
 
 let passBetsPlaced = false;
 let onBetsPlaced = false;
-let canThrow = false;
 let rollOver = true;
 let throwCount = 0
 let rollCount = 0;
@@ -47,17 +46,32 @@ function updateBetsOnSvg() {
   }
   // Iterate through the bets array
   for (const b of bets) {    // Create a visual representation of the bet (e.g., a circle)
+    const noiseX = 5 - 10 * Math.random();
+    const noiseY = 5 - 10 * Math.random();
     const betElement = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-    betElement.setAttribute("cx", b.posX);
-    betElement.setAttribute("cy", b.posY);
+    const x = b.posX + noiseX;
+    const y = b.posY + noiseY;
+    betElement.setAttribute("cx", x);
+    betElement.setAttribute("cy", y);
     betElement.setAttribute("r", 15);
     betElement.setAttribute("fill", b.color);
+    betElement.setAttribute('stroke', 'white');
+    betElement.setAttribute('stroke-width', '2');
+    betsGroup.appendChild(betElement);
+    // Create the text inside the bet circle
+    const text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    text.setAttribute("x", x);
+    text.setAttribute("y", y);
+    text.setAttribute("font-size", "14");
+    text.setAttribute("text-anchor", "middle");
+    text.setAttribute("fill", "white");
+    text.textContent = b.amount;
+    betsGroup.appendChild(text);
     // Add a title element to show the bet information on hover
     const titleElement = document.createElementNS("http://www.w3.org/2000/svg", "title");
     titleElement.textContent = `${b.type} - $${b.amount}`;
     betElement.appendChild(titleElement);
     // Add the bet element to the bets group
-    betsGroup.appendChild(betElement);
   }
 }
 
@@ -89,23 +103,19 @@ function processThrow(throwSum) {
         }
       }
     } else if (bet.type === bt.COME) {
-      if (comeOutThrow) {
-        console.log('cannot place COME bet on comeout throw');
-      } else {
-        if (!(bet.point > 0)) {
-          win = checkFirstThrow(throwSum, bet);
-          if (win === 0) {
-            bet.point = throwSum;
-            bet.posX = bt.pointPosX[throwSum] + player.posX;
-            bet.posY = 230;
-            console.log('xxxx set come odds bets here?');
-            makeComeOddsBet(player, throwSum);
-          }
-        } else if (sevenOut) {
-          win = -bet.amount;
-        } else if (throwSum === bet.point) {
-          win = payout(bet);
+      if (!(bet.point > 0)) {
+        win = checkFirstThrow(throwSum, bet);
+        if (win === 0) {
+          bet.point = throwSum;
+          bet.posX = bt.pointPosX[throwSum] + player.posX;
+          bet.posY = 230;
+          console.log('xxxx set come odds bets here?');
+          makeComeOddsBet(player, throwSum);
         }
+      } else if (sevenOut) {
+        win = -bet.amount;
+      } else if (throwSum === bet.point) {
+        win = payout(bet);
       }
     } else if (bet.type === bt.ODDS_PASS) {
       if (comeOutThrow) {
@@ -227,7 +237,6 @@ function updateRollStatus() {
     isOn = ${isOn}<br>
     passBetsPlaced = ${passBetsPlaced}<br>
     onBetsPlaced = ${onBetsPlaced}<br>
-    canThrow = ${canThrow}<br>
     rollOver = ${rollOver}<br>
     `;
 }
@@ -268,10 +277,7 @@ function updateOnOffIndicator() {
 
 function updateButtons() {
   const throwDiceButton = document.getElementById('throw-dice-button');
-  const placeBetsButton = document.getElementById('set-bets-button');
-  // throwDiceButton.disabled = !canThrow || throwing;
   throwDiceButton.disabled = throwing;
-  placeBetsButton.disabled = passBetsPlaced;
 }
 
 function setCurrentPoint(throwSum) {
@@ -287,8 +293,13 @@ function setCurrentPoint(throwSum) {
   } else {
     comeOutThrow = false;
     madePoint = throwSum === currentPoint;
-    // If the roll is on, only update the isOn status when a 7 or the current point is throwed.
-    if (throwSum === 7 || throwSum === currentPoint) {
+    if (madePoint) {
+      addRollHistory(`made point ${throwSum}`);
+    }
+    if (throwSum === 7) {
+      addRollHistory('seven out');
+    }
+    if (throwSum === 7 || madePoint) {
       isOn = false;
       currentPoint = 0;
     }
@@ -298,7 +309,6 @@ function setCurrentPoint(throwSum) {
 }
 
 function throwDice() {
-  canThrow = false;
   die1 = Math.floor(Math.random() * 6) + 1;
   die2 = Math.floor(Math.random() * 6) + 1;
   throwCount++;
@@ -329,13 +339,14 @@ function makePassOddsBets() {
 }
 
 function makeComeOddsBet(player, throwSum) {
-    const strategy = findBettingStrategyById(player.strategyId);
-    const bet = strategy.createComeOddsBet(player, throwSum);
-    if (bet) {
-      player.balance -= bet.amount;
-      bets.push(bet);
-      addRollHistory(`${player.name} bet ${bet.type} ${bet.amount}`);
-    }
+  const strategy = findBettingStrategyById(player.strategyId);
+  console.log('makeComeOddsBet', player.activeBetCount(bets), strategy.maxActiveBets);
+  const bet = strategy.createComeOddsBet(player, throwSum);
+  if (bet) {
+    player.balance -= bet.amount;
+    bets.push(bet);
+    addRollHistory(`${player.name} bet ${bet.type} ${bet.amount}`);
+  }
 }
 
 function makeOnBets() {
@@ -368,8 +379,6 @@ export function makePassBets() {
     console.log('no pass bets when on');
   }
   passBetsPlaced = true;
-  canThrow = true;
-  updateBetsOnSvg();
   updateTable();
 }
 
@@ -381,7 +390,7 @@ export function doThrow() {
   setCurrentPoint(throwSum);
   processThrow(throwSum);
   if ((comeOutThrow) && (currentPoint > 0)) {
-    console.log('set odds bets now', currentPoint);
+    console.log('set pass odds bets now', currentPoint);
     makePassOddsBets();
   }
   if ((comeOutThrow) && (currentPoint > 0) && !onBetsPlaced) {
@@ -389,7 +398,6 @@ export function doThrow() {
     makeOnBets();
     onBetsPlaced = true;
   }
-  canThrow = isOn || passBetsPlaced;
   updateTable();
 }
 
