@@ -136,10 +136,10 @@ select:hover {
   background-color: #357;
   color: gold;
   font-weight: bold;
-  border: 2px solid white;
+  border: 1px solid white;
   /* padding: 10px 20px; */
   cursor: pointer;
-  width: 100px;
+  width: 120px;
 }
 
 /* Hover effect for the tab buttons */

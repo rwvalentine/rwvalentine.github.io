@@ -2,9 +2,12 @@ class Player {
   constructor(options) {
     this.id = options.id;
     this.name = options.name;
-    this.balance = options.balance;
+    this.initBalance = options.initBalance;
+    this.balance = options.initBalance;
     this.strategyId = options.strategyId;
     this.color = options.color;
+    this.maxSessionTime = options.maxSessionTime;
+    this.allowNegativeBalance = options.allowNegativeBalance;
     this.posX = options.posX;
     this.session = {
       throws: options.session.throws,
@@ -29,7 +32,7 @@ const players = [
   new Player({
     id: 1,
     name: 'Player 1',
-    balance: 1000,
+    initBalance: 1000,
     strategyId: 2,
     color: '#da0',
     posX: 25,
@@ -38,7 +41,7 @@ const players = [
   new Player({
     id: 2,
     name: 'Player 2',
-    balance: 100,
+    initBalance: 100,
     strategyId: 1,
     color: '#44d',
     posX: -25,

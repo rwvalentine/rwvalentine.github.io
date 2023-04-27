@@ -3,6 +3,7 @@ import * as bt from "./bet-types.js";
 import { players } from './players.js';
 import { Bet, payout } from './bets.js';
 import { strategies } from './strategies.js';
+import { throwsPerHour } from './house.js';
 
 let currentPoint = 0;
 let comeOutThrow = true;
@@ -223,9 +224,17 @@ function updatePlayerInfo() {
 
 function updateSessionInfo() {
     const sessionInfoDiv = document.getElementById("session-info");
+    let hours = Math.floor(throwCount / throwsPerHour);
+    let minutes = Math.round(throwCount * 60 / throwsPerHour) % 60;
+    if (minutes < 10) {
+      minutes = `0${minutes}`;
+    }
     sessionInfoDiv.innerHTML = `
     Rolls: ${rollCount}<br>
-    Throws: ${throwCount}<br>`;
+    Throws: ${throwCount}<br>
+    Time: ${hours}h : ${minutes}m<br>
+    `;
+
 }
 
 function updateRollStatus() {
@@ -403,6 +412,14 @@ export function doThrow() {
     makeOnBets();
     onBetsPlaced = true;
   }
+  updateTable();
+}
+
+export function resetSession() {
+  stop = true;
+  throwCount = 0;
+  rollCount = 0;
+  _.forEach(players, p => p.balance = p.initBalance);
   updateTable();
 }
 

@@ -12,8 +12,9 @@
 <body>
   <div class="main-container">
     <div class="tab-container">
-      <button class="tab-button active" id="svg-tab-button">Play</button>
-      <button class="tab-button" id="strategy-tab-button">Strategy</button>
+      <button class="tab-button active" id="svg-tab-button">Table</button>
+      <button class="tab-button" id="strategy-tab-button">Strategies</button>
+      <button class="tab-button" id="player-tab-button">Players</button>
     </div>
 
     <div id="svg-tab" class="tab">
@@ -21,7 +22,7 @@
         <div id="craps-table">
           <object id="craps-table-svg" data="craps-table.svg" type="image/svg+xml"></object>
         </div>
-        <div style="position: absolute; top: 8px; left: 8px; width: 300px;">
+        <div style="position: absolute; top: 8px; left: 8px; width: 400px;">
           <div style="width: 200px; padding-right: 8px; float: left;">
             <button id="throw-dice-button">Throw</button>
             <select id="run-select" style="text-align: right;">
@@ -32,6 +33,7 @@
             </select>
           </div>
           <button id="stop-button">Stop</button>
+          <button id="reset-button">Reset</button>
         </div>
         <div style="display: flex; justify-content: space-between;">
           <div  id="players-info" class="info-box" style="background-color: #121;"></div>
@@ -45,6 +47,9 @@
     </div>
     <div id="strategy-tab" class="tab">
       <div id="stategy-form-container"></div>
+    </div>
+    <div id="player-tab" class="tab">
+      <div id="player-form-container"></div>
     </div>
   </div>
   <script src="craps-simulator.js" type="module" defer></script>

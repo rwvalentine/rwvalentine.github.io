@@ -1,9 +1,8 @@
 import { strategies } from './strategies.js';
-import { makePassBets, doThrow, run, stopRoll } from './craps-simulator.js';
+import { makePassBets, doThrow, run, stopRoll, resetSession } from './craps-simulator.js';
 
-document.getElementById("stop-button").addEventListener("click", () => {
-  stopRoll();
-});
+document.getElementById("reset-button").addEventListener("click", () => resetSession());
+document.getElementById("stop-button").addEventListener("click", () => stopRoll());
 
 
 document.getElementById("throw-dice-button").addEventListener("click", () => {
@@ -13,29 +12,30 @@ document.getElementById("throw-dice-button").addEventListener("click", () => {
   // doThrow();
 });
 
-const strategyTabButton = document.getElementById('strategy-tab-button');
 const svgTabButton = document.getElementById('svg-tab-button');
-const strategyTab = document.getElementById('strategy-tab');
+const strategyTabButton = document.getElementById('strategy-tab-button');
+const playerTabButton = document.getElementById('player-tab-button');
 const svgTab = document.getElementById('svg-tab');
+const strategyTab = document.getElementById('strategy-tab');
+const playerTab = document.getElementById('player-tab');
 
 function showTab(tab) {
   strategyTab.classList.remove('active');
   svgTab.classList.remove('active');
+  playerTab.classList.remove('active');
   tab.classList.add('active');
 }
 
-strategyTabButton.addEventListener('click', () => {
-  showTab(strategyTab);
-});
-
 svgTabButton.addEventListener('click', () => showTab(svgTab));
+strategyTabButton.addEventListener('click', () => showTab(strategyTab));
+playerTabButton.addEventListener('click', () => showTab(playerTab));
 
 const strategyNameInput = document.getElementById('strategy-name');
 const flatBetAmountInput = document.getElementById('flat-bet-amount');
 const percentBetAmountInput = document.getElementById('percent-bet-amount');
 const form = document.getElementById('update-strategy-form');
 
-function updateFormFields(strategyId) {
+function updateStrategyFormFields(strategyId) {
   const strategy = strategies.find(s => s.id === strategyId);
   document.getElementById('strategy-name').value = strategy.name;
   document.getElementById('pass-line').checked = strategy.passLine;
@@ -87,7 +87,7 @@ function setupStrategyForm() {
     // Get the selected strategy ID from the dropdown
     const selectedStrategyId = parseInt(event.target.value, 10);
     // Update the form fields with the selected strategy's properties
-    updateFormFields(selectedStrategyId);
+    updateStrategyFormFields(selectedStrategyId);
   });
   const strategyForm = document.getElementById('strategy-form');
   // Add an event listener for the 'submit' event
@@ -125,12 +125,16 @@ function scaleSVG() {
 const debouncedScaleSVG = _.debounce(scaleSVG, 250);
 
 async function loadForms() {
+  console.log('loading forms...');
   try {
-    const response = await fetch('strategy-form.html');
-    const formHtml = await response.text();
+    let response = await fetch('strategy-form.html');
+    let formHtml = await response.text();
     document.getElementById('stategy-form-container').innerHTML = formHtml;
 
-    console.log('before setupStrategyForm', strategies);
+    response = await fetch('player-form.html');
+    formHtml = await response.text();
+    document.getElementById('player-form-container').innerHTML = formHtml;
+
     setupStrategyForm();
   } catch (error) {
     console.error('Error loading forms:', error);
