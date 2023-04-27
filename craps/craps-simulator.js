@@ -208,10 +208,10 @@ function updatePlayerInfo() {
         w:l - ${p.session.won}:${p.session.lost} = ${Math.round(10000 * p.session.won / (p.session.won + p.session.lost)) / 100 }%<br>
         net: $${p.session.won - p.session.lost}
       `;
-      const pb = _.filter(bets, b => b.playerId === p.id);
-      _.forEach(pb, b => {
-        t += `<br> &nbsp; ${b.type} $${b.amount}`;
-      });
+      // const pb = _.filter(bets, b => b.playerId === p.id);
+      // _.forEach(pb, b => {
+      //   t += `<br> &nbsp; ${b.type} $${b.amount}`;
+      // });
       piDiv.innerHTML = t;
       piDiv.style.paddingLeft = '8px';
       piDiv.style.marginBottom = '8px';
@@ -326,14 +326,22 @@ function updateTable() {
   updateBetsOnSvg();
 }
 
+function addBet(bet, player) {
+  if (bet.amount > 0) {
+    bets.push(bet);
+    addRollHistory(`${player.name} bet ${bet.type} ${bet.amount}`);
+  } else {
+    addRollHistory(`${player.name} broke`);
+  }
+}
+
 function makePassOddsBets() {
   _.forEach(players, p => {
     const strategy = findBettingStrategyById(p.strategyId);
     const bet = strategy.createPassOddsBet(p, currentPoint);
     if (bet) {
       p.balance -= bet.amount;
-      bets.push(bet);
-      addRollHistory(`${p.name} bet ${bet.type} ${bet.amount}`);
+      addBet(bet, p);
     }
   });
 }
@@ -344,8 +352,7 @@ function makeComeOddsBet(player, throwSum) {
   const bet = strategy.createComeOddsBet(player, throwSum);
   if (bet) {
     player.balance -= bet.amount;
-    bets.push(bet);
-    addRollHistory(`${player.name} bet ${bet.type} ${bet.amount}`);
+    addBet(bet, player);
   }
 }
 
@@ -356,8 +363,7 @@ function makeOnBets() {
     const totalBet = _.sumBy(oBets, 'amount');
     p.balance -= totalBet;
     _.forEach(oBets, bet => {
-      addRollHistory(`${p.name} bet ${bet.type} ${bet.amount}`);
-      bets.push(bet);
+      addBet(bet, p);
     })
   });
 }
@@ -370,8 +376,7 @@ export function makePassBets() {
       const bet = strategy.createPassBet(p);
       if (bet) {
         p.balance -= bet.amount;
-        bets.push(bet);
-        addRollHistory(`${p.name} bet ${bet.type} ${bet.amount}`);
+        addBet(bet, p);
       }
     });
     console.log('new player now? pass bets', bets);

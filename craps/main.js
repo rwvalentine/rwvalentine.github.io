@@ -102,6 +102,28 @@ function setupStrategyForm() {
 }
 
 
+let scalableGroup;
+const svgObject = document.getElementById("craps-table-svg");
+svgObject.addEventListener("load", () => {
+  const svgDoc = svgObject.contentDocument;
+  scalableGroup = svgDoc.getElementById("scalable-group");
+  debouncedScaleSVG();
+});
+function scaleSVG() {
+  console.log('scaleSVG');
+  const container = document.getElementById("svg-tab");
+  // const svgObject = document.getElementById("craps-table-svg");
+  const containerWidth = container.clientWidth;
+  const svgWidth = svgObject.clientWidth;
+  const scaleFactor = containerWidth / svgWidth;
+  if (scalableGroup) {
+    scalableGroup.setAttribute("transform", `scale(${scaleFactor})`);
+  } else {
+    // scaleSVG();
+  }
+}
+const debouncedScaleSVG = _.debounce(scaleSVG, 250);
+
 async function loadForms() {
   try {
     const response = await fetch('strategy-form.html');
@@ -116,8 +138,8 @@ async function loadForms() {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
-  // Your code that references the strategies variable
+  window.addEventListener("resize", scaleSVG);
   showTab(svgTab);
+  scaleSVG();
   loadForms();
-  // makePassBets();
 });

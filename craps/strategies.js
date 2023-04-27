@@ -38,6 +38,9 @@ class Strategy {
     // Enforce the min and max bet constraints
     betAmount = Math.max(this.minBet * 1.0, betAmount);
     betAmount = Math.min(this.maxBet * 1.0, betAmount);
+    if (betAmount > playerBalance) {
+      betAmount = 0;
+    }
     return betAmount;
   }
 
