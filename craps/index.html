@@ -4,55 +4,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Craps Simulator</title>
+    <title>Crapsim</title>
     <link rel="stylesheet" href="style.css">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
 </head>
 <body>
-  <div class="main-container">
-    <div class="tab-container">
-      <button class="tab-button active" id="svg-tab-button">Table</button>
-      <button class="tab-button" id="strategy-tab-button">Strategies</button>
-      <button class="tab-button" id="player-tab-button">Players</button>
-    </div>
-
-    <div id="svg-tab" class="tab">
-      <div style="position: relative;">
-        <div id="craps-table">
-          <object id="craps-table-svg" data="craps-table.svg" type="image/svg+xml"></object>
-        </div>
-        <div style="position: absolute; top: 8px; left: 8px; width: 400px;">
-          <div style="width: 200px; padding-right: 8px; float: left;">
-            <button id="throw-dice-button">Throw</button>
-            <select id="run-select" style="text-align: right;">
-              <option value="1">1</option>
-              <option value="10">10</option>
-              <option value="100">100</option>
-              <option value="1000">1000</option>
-            </select>
-          </div>
-          <button id="stop-button">Stop</button>
-          <button id="reset-button">Reset</button>
-        </div>
-        <div style="display: flex; justify-content: space-between;">
-          <div  id="players-info" class="info-box" style="background-color: #121;"></div>
-          <div id="div-roll-history" class="info-box" style="background-color: #332;"></div>
-          <div class="info-box" style="background-color: #333;">
-            <div id="session-info"></div><br>
-            <div id="div-status"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div id="strategy-tab" class="tab">
-      <div id="stategy-form-container"></div>
-    </div>
-    <div id="player-tab" class="tab">
-      <div id="player-form-container"></div>
-    </div>
-  </div>
-  <script src="craps-simulator.js" type="module" defer></script>
-  <script src="main.js" type="module" defer></script>
+ go here now:
+ <a href="crasim.web.app">crapsim</a>
 </body>
 </html>
